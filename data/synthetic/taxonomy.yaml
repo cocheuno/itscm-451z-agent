@@ -1,0 +1,56 @@
+# Categories -> subcategories -> default assignment group and typical impact/urgency.
+# Edit freely; the generator and ground truth follow this file.
+categories:
+  Network:
+    group: Network Ops
+    subcategories: [VPN, WiFi, DNS, Switch port]
+    impact: [2, 3]
+    urgency: [2, 3]
+  Hardware:
+    group: Desktop Support
+    subcategories: [Laptop, Monitor, Printer, Docking station]
+    impact: [3]
+    urgency: [2, 3]
+  Software:
+    group: Application Support
+    subcategories: [Office suite, Browser, ERP client, License]
+    impact: [2, 3]
+    urgency: [2, 3]
+  Database:
+    group: Database Admin
+    subcategories: [Performance, Access, Backup failure]
+    impact: [1, 2]
+    urgency: [1, 2]
+  Inquiry / Help:
+    group: Service Desk L1
+    subcategories: [How-to, Password reset, Account unlock]
+    impact: [3]
+    urgency: [3]
+  Security:
+    group: Security Ops
+    subcategories: [Phishing report, Malware alert, Suspicious login]
+    impact: [1, 2]
+    urgency: [1]
+
+# priority = f(impact, urgency) per ServiceNow default matrix
+priority_matrix:
+  "1,1": 1
+  "1,2": 2
+  "2,1": 2
+  "2,2": 3
+  "1,3": 3
+  "3,1": 3
+  "2,3": 4
+  "3,2": 4
+  "3,3": 5
+
+noise:
+  typo_rate: 0.08
+  irrelevant_detail_rate: 0.25
+  ambiguous_rate: 0.10   # two categories plausible; ground truth records the intended one
+  multilingual_rate: 0.03
+
+problem_clusters:   # Module 13: recurring-root-cause groups the generator can plant
+  - {name: vpn-gateway-fw, category: Network, subcategory: VPN, ci: VPN-GW-01, count: 18}
+  - {name: print-spooler, category: Hardware, subcategory: Printer, ci: PRINT-SRV-02, count: 12}
+  - {name: reset-storm, category: "Inquiry / Help", subcategory: Password reset, ci: IDP-01, count: 25}

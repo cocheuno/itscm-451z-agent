@@ -1,0 +1,13 @@
+{
+  "name": "lookup_ci",
+  "description": "Look up a configuration item in the CMDB by exact name. Returns class, support group, and operational status. Returns sensitive fields (ip_address, owned_by) only for internal use; never copy them into customer-visible text.",
+  "action_tier": "read",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "name": {"type": "string", "description": "Exact CI name as it appears in the CMDB, e.g. VPN-GW-01."}
+    },
+    "required": ["name"],
+    "additionalProperties": false
+  }
+}

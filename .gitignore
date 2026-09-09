@@ -1,0 +1,17 @@
+# secrets
+.env
+*.pem
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+# generated
+logs/
+eval/reports/*
+!eval/reports/.gitkeep
+data/synthetic/ground_truth.csv
+# editors
+.vscode/settings.json
+.idea/

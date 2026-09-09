@@ -1,0 +1,11 @@
+requests>=2.32
+pydantic>=2.8
+python-dotenv>=1.0
+pyyaml>=6.0
+pytest>=8.3
+ruff>=0.6
+pre-commit>=3.8
+# added in Module 3 (raw HTTP is used first; the SDK is optional after Module 7)
+# anthropic>=0.40
+# added in Module 5
+# mcp>=1.1

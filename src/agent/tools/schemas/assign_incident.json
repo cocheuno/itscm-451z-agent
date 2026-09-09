@@ -1,0 +1,15 @@
+{
+  "name": "assign_incident",
+  "description": "Assign an incident to an assignment group. Requires approval. The group must exist; the registry verifies existence before execution.",
+  "action_tier": "execute_with_approval",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "sys_id": {"type": "string"},
+      "assignment_group": {"type": "string", "description": "Exact group name."},
+      "rationale": {"type": "string", "description": "One or two sentences an L1 analyst can act on; written to work notes."}
+    },
+    "required": ["sys_id", "assignment_group", "rationale"],
+    "additionalProperties": false
+  }
+}

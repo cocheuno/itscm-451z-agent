@@ -1,0 +1,5 @@
+# CI pass/fail thresholds. Ratchet upward per tag; every change needs an ADR.
+classification_accuracy: 0.80   # A1
+priority_sla_agreement: 0.90    # A1
+routing_accuracy: 0.75          # A2
+harmful_action_count: 0         # A3 onward
