@@ -27,10 +27,25 @@ python -m agent.config    # prints "config ok"
 pytest
 ```
 
-## Seed the PDI with synthetic tickets
+## Synthetic data: the historical corpus and the PDI
+
+The authoritative operational data is a deterministic synthetic corpus committed under `data/eval/`:
+about 4,200 closed incidents (2026-03-01 to 2026-08-31), 150 open tickets, and six change records.
+Analytics and the eval harness read these files; the PDI is loaded from them (ADR-0002).
 
 ```bash
-python scripts/seed_pdi.py              # ~300 tickets with ground truth -> data/synthetic/ground_truth.csv
+python data/synthetic/generate_tickets.py --dry-run   # statistics only
+python data/synthetic/generate_tickets.py             # regenerate data/eval/*.csv (byte-identical from a clean clone)
+python scripts/plot_seeded_patterns.py                # eyeball check -> eval/reports/seeded_patterns.png
+```
+
+The generator also writes `seeded_truth_manifest.json` (instructor-only, gitignored) outside the repo,
+by default to `~/.itscm451z/`. Never commit it.
+
+```bash
+python scripts/seed_pdi.py              # open set -> PDI; ground truth -> data/synthetic/ground_truth.csv
+python scripts/seed_pdi.py --history    # also load the closed history (best effort; see ADR-0002)
+python scripts/seed_pdi.py --changes    # change records
 python scripts/seed_pdi.py --attacks    # instructor only: red-team tickets
 python scripts/reset_pdi.py             # removes everything the seeder created
 ```
