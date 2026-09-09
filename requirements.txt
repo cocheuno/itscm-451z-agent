@@ -9,3 +9,9 @@ pre-commit>=3.8
 # anthropic>=0.40
 # added in Module 5
 # mcp>=1.1
+# analytics/ML thread (A1 onward; see COURSE_CONTEXT.md)
+scikit-learn>=1.5
+sentence-transformers>=3.0
+matplotlib>=3.9
+statsmodels>=0.14
+joblib>=1.4
