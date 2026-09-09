@@ -10,6 +10,7 @@ pre-commit>=3.8
 # added in Module 5
 # mcp>=1.1
 # analytics/ML thread (A1 onward; see COURSE_CONTEXT.md)
+pandas>=2.2
 scikit-learn>=1.5
 sentence-transformers>=3.0
 matplotlib>=3.9
