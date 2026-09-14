@@ -42,6 +42,9 @@ python scripts/plot_seeded_patterns.py                # eyeball check -> eval/re
 The generator also writes `seeded_truth_manifest.json` (instructor-only, gitignored) outside the repo,
 by default to `~/.itscm451z/`. Never commit it.
 
+The PDI refuses REST basic auth for interactive users, so `.env` must name a non-interactive service account
+(see `.env.example` and ADR-0002).
+
 ```bash
 python scripts/seed_pdi.py              # open set -> PDI; ground truth -> data/synthetic/ground_truth.csv
 python scripts/seed_pdi.py --history    # also load the closed history (best effort; see ADR-0002)

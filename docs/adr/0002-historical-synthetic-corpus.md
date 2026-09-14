@@ -62,6 +62,23 @@ Consequence for the course: the rung-0 poller's `sys_created_on` watermark remai
 live (the open set and anything the student creates), while every historical analysis uses `opened_at`. If the
 probe shows the field was honoured, nothing changes; the CSV is still authoritative.
 
+## Findings from the first PDI load (2026-09-14, instance dev406825)
+- **Basic auth is gated.** The instance logs `SNCRestrictBasicAuthUserAuthenticationGate: denied basic-auth API
+  call for interactive-login user [...] under enforce=true` and answers 401 for `admin` and for any user that can
+  log in interactively. The agent therefore runs as a dedicated service account `agent_svc` with
+  `web_service_access_only` and `internal_integration_user` set (the user form in this release hides the flags;
+  a background script sets them), identity type Machine, roles `itil` + `itil_admin`. `.env.example` reflects
+  this. It is also the least-privilege posture the governance document assumes; `admin` is never granted.
+- **Close codes differ by release.** The incident data policy makes "Resolution code" mandatory on closed
+  records, and the instance blanks any `close_code` value it does not know. The corpus keeps the legacy labels
+  ("Solved (Permanently)" and friends) because it is authoritative and release-independent; `seed_pdi.py` reads
+  `incident.close_code` from `sys_choice` at load time and maps onto the live list, falling back to the
+  post-Utah defaults ("Solution provided", "Workaround provided", "No resolution provided").
+- **Open set and history are separate targets** (`--open`, `--history`, `--changes`) so a history run never
+  re-inserts the 150 open tickets; the first attempt did, and `reset_pdi.py` was needed before retrying.
+- **`sys_created_on` probe:** pending; the first successful `--history` run prints the sent-versus-stored table,
+  to be pasted here.
+
 ## Alternatives considered
 - LLM-paraphrased cluster text: better prose, but non-deterministic, needs an API key in CI, and costs money on
   every regeneration. Rejected; the compositional grammar is enough to defeat exact-match clustering.
