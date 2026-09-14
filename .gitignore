@@ -15,3 +15,7 @@ data/synthetic/ground_truth.csv
 # editors
 .vscode/settings.json
 .idea/
+
+# instructor-only seeded-truth manifest (see data/synthetic/generate_tickets.py)
+seeded_truth_manifest.json
+data/synthetic/history_pdi_map.csv
