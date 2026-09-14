@@ -1,4 +1,6 @@
-# Categories -> subcategories -> default assignment group and typical impact/urgency.
+# Categories -> subcategories -> default assignment group, typical impact/urgency, volume share,
+# resolution-time baseline and phrase banks. This file describes the world the corpus is drawn from;
+# data/synthetic/patterns.yaml describes what is deliberately hidden in it.
 # Edit freely; the generator and ground truth follow this file.
 categories:
   Network:
@@ -6,31 +8,179 @@ categories:
     subcategories: [VPN, WiFi, DNS, Switch port]
     impact: [2, 3]
     urgency: [2, 3]
+    weight: 0.20                 # share of background volume
+    resolve_median_min: 300      # lognormal median for SLA-met tickets (before clipping to target)
+    resolve_sigma: 0.9
+    contexts: ["from home", "in Hyland 2nd floor", "in the Madison office", "in Building C", "in the warehouse",
+               "on the corporate laptop", "since this morning", "since yesterday", "on and off all week",
+               "for my whole team", "after the weekend", "on the Chicago floor"]
+    close_notes: ["Reset network profile on user device; confirmed working.", "Port re-enabled; user confirmed.",
+                  "Access point rebooted; signal restored.", "DNS cache flushed and resolver corrected.",
+                  "Reconnected user and verified stable for 15 minutes.", "Replaced faulty patch cable.",
+                  "Updated client to latest version; issue resolved."]
   Hardware:
     group: Desktop Support
     subcategories: [Laptop, Monitor, Printer, Docking station]
     impact: [3]
     urgency: [2, 3]
+    weight: 0.18
+    resolve_median_min: 600
+    resolve_sigma: 0.6
+    contexts: ["at my desk", "in Hyland 2nd floor", "in the Madison office", "in the Building C lab", "at home",
+               "since this morning", "since last Friday", "on the Dell Latitude", "on the ThinkPad",
+               "on the MacBook Pro", "for a colleague", "in the shared workspace"]
+    close_notes: ["Swapped device with spare; original sent for repair.", "Reseated cable and tested; working.",
+                  "Firmware updated; user confirmed.", "Replaced faulty unit from stock.",
+                  "Cleaned and re-imaged device; returned to user.", "Hardware fault confirmed; vendor RMA raised.",
+                  "Adjusted power settings; no recurrence."]
   Software:
     group: Application Support
     subcategories: [Office suite, Browser, ERP client, License]
     impact: [2, 3]
     urgency: [2, 3]
+    weight: 0.17
+    resolve_median_min: 420
+    resolve_sigma: 0.9
+    contexts: ["on my laptop", "on the terminal server", "since the update", "since yesterday", "for the whole team",
+               "when working offline", "on the shared workstation", "in the Madison office", "for month-end",
+               "after the reboot", "on the new build", "for one user only"]
+    close_notes: ["Repaired installation; verified with user.", "Reset user profile for the application.",
+                  "Applied vendor hotfix; confirmed working.", "License reassigned and activated.",
+                  "Cleared cache and re-launched; resolved.", "Reinstalled client at supported version.",
+                  "Configuration corrected; user tested successfully."]
   Database:
     group: Database Admin
     subcategories: [Performance, Access, Backup failure]
     impact: [1, 2]
     urgency: [1, 2]
+    weight: 0.07
+    resolve_median_min: 240
+    resolve_sigma: 0.8
+    contexts: ["on the reporting database", "on the finance schema", "since last night", "since the weekend",
+               "for the dashboards", "for month-end", "on the warehouse DB", "since the maintenance window",
+               "on the production instance", "for the analytics team"]
+    close_notes: ["Rebuilt index and updated statistics; latency normal.", "Granted role per approved request.",
+                  "Backup job re-run successfully; schedule corrected.", "Killed blocking session; monitoring.",
+                  "Storage extended; backups completing.", "Query plan pinned; dashboards back within SLA.",
+                  "Access provisioned and verified with requester."]
   Inquiry / Help:
     group: Service Desk L1
     subcategories: [How-to, Password reset, Account unlock]
     impact: [3]
     urgency: [3]
+    weight: 0.30
+    resolve_median_min: 45
+    resolve_sigma: 1.0
+    contexts: ["this morning", "while travelling", "on the new phone", "after returning from leave", "at home",
+               "before my shift", "for a new starter", "on the shared mailbox", "after the weekend",
+               "on my second device", "for the intern", "before a deadline"]
+    close_notes: ["Password reset; user signed in successfully.", "Account unlocked; advised on lockout policy.",
+                  "Walked user through the steps; resolved.", "Sent knowledge article; user confirmed.",
+                  "Verified identity and reset credentials.", "Enabled account; no further action.",
+                  "Explained self-service option for next time."]
   Security:
     group: Security Ops
     subcategories: [Phishing report, Malware alert, Suspicious login]
     impact: [1, 2]
     urgency: [1]
+    weight: 0.08
+    resolve_median_min: 180
+    resolve_sigma: 0.8
+    contexts: ["on my laptop", "on the shared mailbox", "this morning", "over the weekend", "from an unknown location",
+               "on the build machine", "for several people", "in my inbox", "on the dev laptop", "after the update"]
+    close_notes: ["Confirmed phishing; sender blocked and message purged.", "Quarantined file reviewed; benign, restored.",
+                  "Password rotated and sessions revoked; user notified.", "Malware removed; device re-scanned clean.",
+                  "Login confirmed as user's own travel; no action.", "Indicators added to blocklist.",
+                  "Device isolated, cleaned and returned."]
+
+# Background phrase banks per subcategory. The generator combines these with category contexts,
+# the shared frames in patterns.yaml, synonym substitution and noise, so no two tickets are stamped alike.
+phrases:
+  VPN:
+    symptoms: ["cannot connect to the VPN", "VPN drops every few minutes", "VPN is extremely slow", "VPN client will not open",
+               "VPN asks for credentials over and over", "VPN connects but I cannot reach the file share"]
+    artifacts: ["Error 0x80004005 appears.", "It says gateway timeout.", "The client just spins.", "Rebooting did not help."]
+  WiFi:
+    symptoms: ["WiFi keeps disconnecting", "cannot see the corporate SSID", "WiFi shows connected but no internet",
+               "WiFi signal is very weak", "laptop will not join the wireless network", "WiFi drops during video calls"]
+    artifacts: ["Phone connects fine.", "It shows limited connectivity.", "Other people nearby have the same issue.",
+                "Forgetting the network did not help."]
+  DNS:
+    symptoms: ["internal sites do not resolve", "cannot open the intranet by name", "nslookup times out",
+               "external sites work but internal ones do not", "name resolution is slow", "hostnames stopped resolving"]
+    artifacts: ["Pinging by IP works.", "nslookup returns server failed.", "It started after a reboot.", "Flushing DNS did nothing."]
+  Switch port:
+    symptoms: ["wired port at my desk is dead", "link light is off on the wall port", "wired connection keeps dropping",
+               "no network on the docking station ethernet", "the wall jack stopped working", "wired network is very slow"]
+    artifacts: ["Laptop works on another port.", "Cable tested fine.", "WiFi works as a workaround.", "Light is off."]
+  Laptop:
+    symptoms: ["laptop will not power on", "laptop fan is extremely loud and it shuts down", "laptop battery drains in an hour",
+               "laptop screen flickers", "keyboard keys stopped working", "laptop is painfully slow to boot"]
+    artifacts: ["Battery light blinks 3 times.", "It is hot to the touch.", "Charger light is on.", "It happened twice today."]
+  Monitor:
+    symptoms: ["external monitor goes black every few minutes", "second monitor is not detected", "monitor flickers",
+               "display shows no signal", "monitor colours look wrong", "screen resolution keeps resetting"]
+    artifacts: ["Tried another cable.", "Works on a different laptop.", "Power light is on.", "It started after an update."]
+  Printer:
+    symptoms: ["printer shows offline", "print jobs come out blank", "printer jams on every page", "cannot add the printer",
+               "printer prints garbage characters", "the printer is very slow"]
+    artifacts: ["Jobs are stuck in the queue.", "It prints from my phone.", "Toner is fine.", "Restarting the printer did not help."]
+  Docking station:
+    symptoms: ["dock does not charge the laptop", "dock does not pass through the monitors", "dock keeps disconnecting",
+               "USB ports on the dock are dead", "dock is not recognised", "audio through the dock is broken"]
+    artifacts: ["Works when plugged in directly.", "Power light is on.", "Tried a different cable.", "It worked last week."]
+  Office suite:
+    symptoms: ["spreadsheet application crashes on large files", "documents will not open", "email client freezes on startup",
+               "autosave stopped working", "presentation software crashes when inserting images", "cannot save to the shared drive"]
+    artifacts: ["Safe mode works.", "The error mentions a missing component.", "It crashes without a message.", "Repair did not help."]
+  Browser:
+    symptoms: ["browser shows a certificate warning on the intranet", "browser crashes on startup", "web apps will not load",
+               "browser is extremely slow", "cannot sign in to the portal", "downloads fail in the browser"]
+    artifacts: ["Another browser works.", "Clearing cache did nothing.", "It started after the update.", "Extensions are disabled."]
+  ERP client:
+    symptoms: ["ERP client freezes on login", "ERP client will not start", "ERP screens are slow to load",
+               "cannot post entries in ERP", "ERP client crashes when opening orders", "ERP shows a connection error"]
+    artifacts: ["Several users are affected.", "It happened after the update.", "The web version works.", "Reinstall did not help."]
+  License:
+    symptoms: ["design software says the license has expired", "cannot activate the application", "license server not found",
+               "software went into trial mode", "license check fails on startup", "seat is not available"]
+    artifacts: ["I need it for a deadline.", "It worked yesterday.", "The error mentions the license server.", "Colleagues are fine."]
+  Performance:
+    symptoms: ["reporting database queries are taking much longer", "dashboards are timing out", "database is very slow",
+               "batch job is running for hours", "queries hang on the finance schema", "reports take 10x longer"]
+    artifacts: ["It started after the maintenance window.", "Small queries are fine.", "CPU looks pegged.", "Users are complaining."]
+  Access:
+    symptoms: ["need read access to the finance schema", "cannot log in to the reporting database", "permission denied on the schema",
+               "need a database account for a new starter", "access was removed after the migration", "cannot see the new tables"]
+    artifacts: ["Manager approved.", "It is needed for month-end.", "I had access last month.", "Error ORA-01017."]
+  Backup failure:
+    symptoms: ["nightly backup failed", "backup job shows errors", "backup did not run", "restore test failed",
+               "backup is taking twice as long", "backup destination is full"]
+    artifacts: ["Error E-4471 in the log.", "It failed two nights in a row.", "The alert came in at 3am.", "Previous backups are fine."]
+  How-to:
+    symptoms: ["how do I set up an out-of-office reply", "how do I share my calendar", "need help setting up email on my phone",
+               "how do I map the shared drive", "how do I forward my mail", "need instructions for the VPN client"]
+    artifacts: ["Not urgent.", "I am new here.", "The guide I found is out of date.", "My manager asked me to sort this."]
+  Password reset:
+    symptoms: ["locked out after too many attempts", "password expired and I cannot change it", "forgot my password",
+               "password reset link does not arrive", "cannot change my password remotely", "new password is rejected"]
+    artifacts: ["Phone number on file is old.", "I am travelling.", "Self-service did not work.", "I need it before 9."]
+  Account unlock:
+    symptoms: ["account shows disabled", "cannot sign in, account locked", "account was disabled after leave",
+               "my login was deactivated", "account locked after a failed login", "need my account re-enabled"]
+    artifacts: ["HR says I am active.", "I returned from leave yesterday.", "It says contact your administrator.", "Password is correct."]
+  Phishing report:
+    symptoms: ["received an email asking me to confirm bank details", "got a suspicious invoice email", "email from the CEO asking for gift cards",
+               "phishing email with a fake login link", "suspicious attachment from an unknown sender", "email impersonating payroll"]
+    artifacts: ["I did not click the link.", "Several colleagues got it too.", "I clicked but did not enter anything.", "Forwarded as attachment."]
+  Malware alert:
+    symptoms: ["endpoint protection quarantined a file", "antivirus popped up a threat alert", "browser was hijacked by a toolbar",
+               "malware alert on a downloaded file", "endpoint agent blocked a process", "got a ransomware warning popup"]
+    artifacts: ["File came from an email attachment.", "The alert names a trojan.", "I ran a full scan.", "The laptop is still slow."]
+  Suspicious login:
+    symptoms: ["got a login notification from another country", "sign-in alert from a device I do not own", "someone logged in as me",
+               "unexpected MFA prompt at night", "account shows sessions I do not recognise", "password change email I did not request"]
+    artifacts: ["That was not me.", "I changed my password already.", "It was at 3am.", "The location was overseas."]
 
 # priority = f(impact, urgency) per ServiceNow default matrix
 priority_matrix:
@@ -44,13 +194,24 @@ priority_matrix:
   "3,2": 4
   "3,3": 5
 
+# Text noise (also configurable per corpus in patterns.yaml -> paraphrase)
 noise:
-  typo_rate: 0.08
-  irrelevant_detail_rate: 0.25
+  typo_rate: 0.05
+  irrelevant_detail_rate: 0.18
   ambiguous_rate: 0.10   # two categories plausible; ground truth records the intended one
-  multilingual_rate: 0.03
+  multilingual_rate: 0.02
 
-problem_clusters:   # Module 13: recurring-root-cause groups the generator can plant
-  - {name: vpn-gateway-fw, category: Network, subcategory: VPN, ci: VPN-GW-01, count: 18}
-  - {name: print-spooler, category: Hardware, subcategory: Printer, ci: PRINT-SRV-02, count: 12}
-  - {name: reset-storm, category: "Inquiry / Help", subcategory: Password reset, ci: IDP-01, count: 25}
+irrelevant_details:
+  - "Also, the coffee machine on this floor is broken."
+  - "I was at a conference last week so this may be old."
+  - "Not urgent but my manager keeps asking."
+  - "Sorry if this is the wrong queue."
+  - "Let me know if you need my asset tag."
+  - "I can be reached on Teams."
+multilingual_prefixes:
+  - "No puedo conectarme desde casa; el error aparece después de la contraseña."
+  - "Mon ordinateur portable ne s'allume plus depuis ce matin."
+  - "Der Drucker im zweiten Stock ist wieder offline."
+
+close_codes: ["Solved (Permanently)", "Solved (Work Around)", "Solved Remotely (Permanently)", "Not Solved (Not Reproducible)"]
+close_code_weights: [0.55, 0.2, 0.2, 0.05]
