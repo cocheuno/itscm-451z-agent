@@ -8,3 +8,6 @@ All notable changes to this project are documented here. Format: Keep a Changelo
   degrading MTTR, breach signal, poison bait); committed corpus under `data/eval/`; pattern-presence tests;
   instructor plot script; PDI seeder loads open set and closed history (ADR-0002).
 - Analytics/ML dependencies (pandas, scikit-learn, sentence-transformers, matplotlib, statsmodels, joblib).
+### Fixed
+- `ServiceNowClient._request` no longer tries to parse JSON from a `204 No Content` (or empty) body, so
+  `scripts/reset_pdi.py` survives its first DELETE instead of crashing with `JSONDecodeError`.
