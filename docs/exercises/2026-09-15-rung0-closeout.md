@@ -2,8 +2,69 @@
 
 About 75 minutes. Three parts, one PR at the end, then tag `v0.0`.
 
-**Before class:** `git checkout main && git pull origin main`, then `pip install -r requirements.txt`
-(the analytics libraries were added last week).
+## Where we are
+
+At the end of Sep 8 you had a clone of this repository, a Python environment, and a `.env` pointed at your PDI
+(`docs/setup.md`). Since then the instructor merged ten pull requests into `main`. You did not write them, but
+you will use every one of them, so here is what changed and why:
+
+| PRs | What landed | Why it matters today |
+|---|---|---|
+| 1, 2, 4 | `requirements.txt` gained pandas, scikit-learn, sentence-transformers, matplotlib, statsmodels, joblib | Part 3 needs pandas; Thursday needs scikit-learn |
+| 3 | A deterministic synthetic corpus: `data/eval/incidents_history.csv` (4,242 closed incidents, Mar to Aug 2026), `incidents_open.csv` (150 open), `changes.csv` (6), the generator that made them, and ADR-0002 | Everything you analyse or train on comes from these files |
+| 5 to 9 | `scripts/seed_pdi.py` learned what the PDI actually does: it refuses basic auth for interactive users, its close codes changed in Utah, it stamps every timestamp with the insert time, and closed incidents are read-only. All recorded in ADR-0002 | Part 1 is the service account this forced; Part 3 explains why you read the CSV and not the PDI |
+| 10 | This handout, Thursday's, the `src/agent/analytics/` package, `notebooks/01_history_eda.py`, and an acceptance test for `list_all` | Your starting point for Parts 2 and 3 |
+
+The pattern to notice: every change arrived as a feature branch, a pull request with the template filled in,
+green CI, and a merge by the reviewer. Nothing went to `main` directly. That is the Git thread of the course,
+and your PR today follows the same path. `git log --oneline --merges` shows the ten merges.
+
+## Update your clone (do this first, about 10 minutes)
+
+1. See what state your clone is in:
+
+   ```
+   git status
+   git branch
+   ```
+
+   If `git status` lists modified files you want to keep, commit them on a branch first
+   (`git checkout -b wip-sep08 && git add -A && git commit -m "WIP from Sep 8"`). `.env` is git-ignored and
+   is never listed; leave it where it is.
+2. Get onto `main` and pull:
+
+   ```
+   git checkout main
+   git pull origin main
+   git log --oneline -1
+   ```
+
+   The last command should print `eaf0322 Merge pull request #10 ...` (or newer). If `git pull` complains
+   about local changes, go back to step 1. If your `origin` is a fork rather than
+   `cocheuno/itscm-451z-agent`, add the course repo as `upstream` and pull from that instead:
+   `git remote add upstream git@github.com:cocheuno/itscm-451z-agent.git && git pull upstream main`.
+3. Install the new libraries into your virtual environment (activate it first: `.venv\Scripts\activate` on
+   Windows, `source .venv/bin/activate` elsewhere):
+
+   ```
+   pip install -r requirements.txt
+   pip install -e .
+   ```
+
+   `sentence-transformers` pulls in PyTorch, which is a large download (well over a gigabyte with GPU
+   support). If it is slow or fails, install the CPU build first and re-run the line above:
+   `pip install torch --index-url https://download.pytorch.org/whl/cpu`. You do not need it until Module 5.
+4. Prove the clone is healthy:
+
+   ```
+   pytest -q
+   ```
+
+   Expect `44 passed, 1 skipped` (the skip is the pagination acceptance test you will turn green in Part 2).
+   If the count is lower, `requirements.txt` did not fully install; read the first error.
+
+Your PDI is still empty. Part 2 loads it. If you seeded it on Sep 8 with an older version of the script, run
+`python scripts/reset_pdi.py` after Part 1 before seeding again; it only removes records the seeder created.
 
 **Two rules for the whole course, starting now**
 
