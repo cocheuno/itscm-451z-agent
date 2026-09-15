@@ -25,9 +25,9 @@ class FakeClient:
 
     NOW = "2026-09-15 01:37:20"
 
-    def __init__(self, rows=None, fail=False, stamp_on_insert=False, stamp_on_update=False):
+    def __init__(self, rows=None, fail=False, stamp_on_insert=False, stamp_on_update=False, refuse_update=False):
         self.rows, self.fail, self.calls = rows or [], fail, []
-        self.stamp_on_insert, self.stamp_on_update = stamp_on_insert, stamp_on_update
+        self.stamp_on_insert, self.stamp_on_update, self.refuse_update = stamp_on_insert, stamp_on_update, refuse_update
         self.store: dict[str, dict] = {}
 
     def list(self, table, query="", fields=None, limit=100, offset=0):
@@ -55,6 +55,8 @@ class FakeClient:
 
     def update(self, table, sys_id, payload):
         self.calls.append(("update", table, sys_id))
+        if self.refuse_update:
+            raise RuntimeError("PATCH -> 403: ACL Exception Update Failed due to security constraints")
         self.store[sys_id].update(payload)
         if self.stamp_on_update:
             self._stamp(self.store[sys_id])
@@ -150,3 +152,13 @@ def test_load_history_stops_patching_when_update_is_stamped_too(tmp_path, capsys
     assert sn.store["id2"]["correlation_id"] == "SYN0000002"  # the join key survives either way
     out = capsys.readouterr().out
     assert "backdating probe" in out and "after PATCH" in out and "OVERRIDDEN" in out
+
+
+def test_load_history_survives_a_refused_patch(tmp_path, capsys):
+    seed = load_seeder()
+    sn = FakeClient(stamp_on_insert=True, refuse_update=True)
+    report, patched = seed.load_history(sn, rows(3), "[SYN]", lambda c: c, map_path=tmp_path / "map.csv")
+    assert patched is False
+    assert [c[2] for c in sn.calls if c[0] == "update"] == ["id1"]
+    assert len([c for c in sn.calls if c[0] == "create"]) == 3  # the load finished
+    assert "after PATCH: refused -> PATCH -> 403: ACL Exception" in capsys.readouterr().out

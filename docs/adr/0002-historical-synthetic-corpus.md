@@ -97,8 +97,11 @@ probe shows the field was honoured, nothing changes; the CSV is still authoritat
   directly in state 7 (Closed) runs the incident lifecycle rules, which stamp the open, resolve and close times
   with the insert time. The cause was not isolated further (candidates: the closed-state business rules, a
   field-level write ACL for the service account); it does not matter for the course, because the brief already
-  fixes the fallback. The seeder now also tries one PATCH of the three date fields after the first insert and
-  keeps patching every row only if the instance honours the update; the second run will show which.
+  fixes the fallback. The seeder also tries one PATCH of the three date fields after the first insert and would
+  keep patching every row if the instance honoured the update. Second run (2026-09-15 01:54 UTC): the PATCH was
+  refused outright, `403 ACL Exception Update Failed due to security constraints`, so closed incidents are
+  read-only for `itil`/`itil_admin` on this instance and there is no update path either. `correlation_id` was
+  honoured on insert.
 
   **Decision (per the brief's fallback):** `data/eval/incidents_history.csv` is the only source of time for the
   historical analytics. The PDI copy of the history is for text, routing and demo work, and every PDI history

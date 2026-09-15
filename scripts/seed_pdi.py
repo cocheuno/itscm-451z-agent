@@ -164,8 +164,12 @@ def load_history(sn, rows: list[dict], mark: str, resolve: Callable[[str], str],
             if i == 0:
                 report = probe_backdating(sn, rec["sys_id"], payload)
                 if not all(report[d] for d in DATE_FIELDS):
-                    patch_dates(sn, rec["sys_id"], payload)
-                    patch = all(_compare(sn, rec["sys_id"], payload, DATE_FIELDS, "after PATCH").values())
+                    try:
+                        patch_dates(sn, rec["sys_id"], payload)
+                    except Exception as e:  # the experiment failing is a finding, not a reason to abort the load
+                        print(f"after PATCH: refused -> {e}")
+                    else:
+                        patch = all(_compare(sn, rec["sys_id"], payload, DATE_FIELDS, "after PATCH").values())
             elif patch:
                 patch_dates(sn, rec["sys_id"], payload)
             w.writerow({"corpus_number": row["number"], "sys_id": rec["sys_id"], "number": rec["number"]})
@@ -241,8 +245,8 @@ def main() -> int:
         elif patched:
             print("NOTE: insert stamped the timestamps; a PATCH after insert restored them and was applied to every row")
         else:
-            print("NOTE: the instance stamps opened_at/resolved_at/closed_at on insert and on update, so the PDI "
-                  "history has no usable timestamps. Join correlation_id (= corpus number) to "
+            print("NOTE: the instance stamps opened_at/resolved_at/closed_at on insert and refuses or stamps the "
+                  "update, so the PDI history has no usable timestamps. Join correlation_id (= corpus number) to "
                   "data/eval/incidents_history.csv for time-based analytics (ADR-0002)")
 
     if change_rows:
