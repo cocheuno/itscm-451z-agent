@@ -45,6 +45,8 @@ class ServiceNowClient:
                 continue
             if r.status_code >= 400:
                 raise ServiceNowError(f"{method} {url} -> {r.status_code}: {r.text[:300]}")
+            if r.status_code == 204 or not r.content:
+                return {}  # DELETE answers 204 No Content; there is no JSON to parse
             return r.json()
         raise ServiceNowError(f"giving up after {retries} attempts: {last}")
 
