@@ -39,10 +39,24 @@ and your PR today follows the same path. `git log --oneline --merges` shows the 
    git log --oneline -1
    ```
 
-   The last command should print `eaf0322 Merge pull request #10 ...` (or newer). If `git pull` complains
-   about local changes, go back to step 1. If your `origin` is a fork rather than
-   `cocheuno/itscm-451z-agent`, add the course repo as `upstream` and pull from that instead:
-   `git remote add upstream git@github.com:cocheuno/itscm-451z-agent.git && git pull upstream main`.
+   The last command should print `5018b0f Merge pull request #11 ...` (or newer). If `git pull` complains
+   about local changes, go back to step 1.
+
+   **If the commit it prints is something else entirely** (for example `f5dd47c`) and `pytest -q` reports only
+   6 tests, your clone is of an earlier copy of the project, not of `cocheuno/itscm-451z-agent` (the course
+   repository was created on Sep 9). The histories are unrelated and a pull cannot join them. Re-clone, and
+   keep the old folder only for its `.env`:
+
+   ```
+   cd ..
+   git clone https://github.com/cocheuno/itscm-451z-agent.git
+   cd itscm-451z-agent
+   copy ..\<old-folder>\.env .env        # macOS/Linux: cp ../<old-folder>/.env .env
+   python -m venv .venv
+   ```
+
+   then continue with step 3 in the new folder. Delete the old folder once you have copied anything you
+   changed on Sep 8.
 3. Install the new libraries into your virtual environment (activate it first: `.venv\Scripts\activate` on
    Windows, `source .venv/bin/activate` elsewhere):
 
