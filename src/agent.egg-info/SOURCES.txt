@@ -8,6 +8,10 @@ src/agent.egg-info/PKG-INFO
 src/agent.egg-info/SOURCES.txt
 src/agent.egg-info/dependency_links.txt
 src/agent.egg-info/top_level.txt
+src/agent/analytics/__init__.py
+src/agent/analytics/features.py
+src/agent/analytics/predict.py
+src/agent/analytics/train.py
 src/agent/servicenow/__init__.py
 src/agent/servicenow/client.py
 src/agent/servicenow/tables.py
@@ -16,6 +20,11 @@ src/agent/tools/registry.py
 src/agent/tools/tiers.py
 src/agent/workflow/__init__.py
 src/agent/workflow/sla.py
+tests/test_analytics.py
+tests/test_client_pagination.py
 tests/test_rules.py
+tests/test_seed_pdi.py
+tests/test_seeded_patterns.py
+tests/test_servicenow_client.py
 tests/test_sla.py
 tests/test_tiers.py

@@ -8,6 +8,10 @@ All notable changes to this project are documented here. Format: Keep a Changelo
   degrading MTTR, breach signal, poison bait); committed corpus under `data/eval/`; pattern-presence tests;
   instructor plot script; PDI seeder loads open set and closed history (ADR-0002).
 - Analytics/ML dependencies (pandas, scikit-learn, sentence-transformers, matplotlib, statsmodels, joblib).
+- Rung 1 scaffolding: `src/agent/analytics/` (`features.py` with the time split, `train.py` with the model-card
+  and artifact plumbing around a `TODO(student)` pipeline, `predict.py`), harness dispatch for rung 1, an EDA
+  starter notebook, a pagination acceptance test, and handouts for the Sep 15 and Sep 17 sessions under
+  `docs/exercises/`.
 ### Changed
 - PDI history records carry their corpus number in `correlation_id`; the instance stamps all four timestamps on
   insert, so `data/eval/incidents_history.csv` is the only source of time for analytics (ADR-0002 findings).

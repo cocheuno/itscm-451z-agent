@@ -76,7 +76,7 @@ probe shows the field was honoured, nothing changes; the CSV is still authoritat
   post-Utah defaults ("Solution provided", "Workaround provided", "No resolution provided").
 - **Open set and history are separate targets** (`--open`, `--history`, `--changes`) so a history run never
   re-inserts the 150 open tickets; the first attempt did, and `reset_pdi.py` was needed before retrying.
-  The full history is 4,242 inserts at about one round trip per second, so `--history --resume` continues an
+  The full history is 4,242 inserts at three to four per second, about 20 minutes, so `--history --resume` continues an
   interrupted load by skipping corpus numbers already present in `correlation_id`.
 - **The instance stamps every timestamp on insert, not just `sys_created_on`.** First successful `--history`
   run (2026-09-15, `agent_svc`, `--limit 50`), sent versus stored on the first record:
