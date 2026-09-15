@@ -12,7 +12,7 @@
 Each target (--open, --history, --changes) loads only when asked; with no target the open set loads, so a
 history run never duplicates the open tickets. Not idempotent: run scripts/reset_pdi.py before re-seeding,
 except that --history --resume skips corpus rows whose correlation_id is already in the PDI. The full history
-is 4,242 inserts at roughly one round trip per second; a progress line with an ETA prints every 100 rows.
+is 4,242 inserts at three to four per second (about 20 minutes); a progress line with an ETA prints every 100 rows.
 The corpus CSVs stay authoritative: analytics and the eval harness read data/eval/, never the PDI (ADR-0002).
 
 Instance compatibility (ADR-0002, findings from the first load): the PDI refuses REST basic auth for any

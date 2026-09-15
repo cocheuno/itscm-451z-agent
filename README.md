@@ -49,11 +49,16 @@ The PDI refuses REST basic auth for interactive users, so `.env` must name a non
 python scripts/seed_pdi.py              # open set -> PDI; ground truth -> data/synthetic/ground_truth.csv
 python scripts/seed_pdi.py --history    # closed history; the PDI stamps its timestamps, so join
                                         # correlation_id to data/eval/incidents_history.csv (ADR-0002)
-python scripts/seed_pdi.py --history --resume   # continue an interrupted history load (about an hour in full)
+python scripts/seed_pdi.py --history --resume   # continue an interrupted history load (about 20 minutes in full)
 python scripts/seed_pdi.py --changes    # change records
 python scripts/seed_pdi.py --attacks    # instructor only: red-team tickets
 python scripts/reset_pdi.py             # removes everything the seeder created
 ```
+
+## In-class exercises
+
+One handout per session under `docs/exercises/`, each ending in a PR. The Rung 1 scaffolding lives in
+`src/agent/analytics/` (features, train, predict) and `notebooks/`.
 
 ## Run the eval harness
 

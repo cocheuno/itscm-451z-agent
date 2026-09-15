@@ -40,12 +40,16 @@ def run_rung(rung: str, rows: list[dict], fixtures: bool) -> list[dict]:
     if rung == "0":
         from agent.rung0_poller import classify_with_rules  # noqa: E402
         return [{**r, **classify_with_rules(r)} for r in rows]
+    if rung == "1":
+        from agent.analytics.predict import classify  # noqa: E402
+        return [{**r, **classify(r)} for r in rows]
     raise NotImplementedError(f"rung {rung} entry point not wired into the harness yet")
 
 
 def detect_rung() -> str:
     """Highest rung whose entry point exists. TODO(student): extend as rungs are added."""
-    return "0"
+    from agent.analytics.predict import available  # noqa: E402
+    return "1" if available() else "0"
 
 
 def compute(rows: list[dict]) -> dict:
