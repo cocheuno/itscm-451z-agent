@@ -162,3 +162,31 @@ def test_load_history_survives_a_refused_patch(tmp_path, capsys):
     assert [c[2] for c in sn.calls if c[0] == "update"] == ["id1"]
     assert len([c for c in sn.calls if c[0] == "create"]) == 3  # the load finished
     assert "after PATCH: refused -> PATCH -> 403: ACL Exception" in capsys.readouterr().out
+
+
+def test_existing_history_pages_until_a_short_page():
+    seed = load_seeder()
+
+    class Paged(FakeClient):
+        def list(self, table, query="", fields=None, limit=100, offset=0):
+            self.calls.append((table, query, limit, offset))
+            data = [{"correlation_id": f"SYN{i:07d}"} for i in range(1, 6)]
+            return data[offset:offset + limit]
+
+    sn = Paged()
+    assert seed.existing_history(sn, page=2) == {f"SYN{i:07d}" for i in range(1, 6)}
+    assert [c[3] for c in sn.calls] == [0, 2, 4]
+    assert sn.calls[0][1] == "correlation_idSTARTSWITHSYN"
+
+
+def test_load_history_resume_appends_and_reports_progress(tmp_path, capsys):
+    seed = load_seeder()
+    path = tmp_path / "map.csv"
+    sn = FakeClient()
+    seed.load_history(sn, rows(2), "[SYN]", lambda c: c, map_path=path)
+    seed.load_history(sn, rows(5)[2:], "[SYN]", lambda c: c, map_path=path, append=True, every=2)
+    lines = path.read_text().splitlines()
+    assert lines[0] == "corpus_number,sys_id,number" and len(lines) == 6  # one header, five rows
+    assert lines[-1].startswith("SYN0000005,")
+    out = capsys.readouterr().out
+    assert "2/3 history rows" in out and "3/3 history rows" in out and "min left" in out

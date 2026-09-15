@@ -13,6 +13,8 @@ All notable changes to this project are documented here. Format: Keep a Changelo
   insert, so `data/eval/incidents_history.csv` is the only source of time for analytics (ADR-0002 findings).
   The seeder retries the dates with one PATCH and keeps patching only if the instance honours it; a refused
   PATCH (403 ACL on closed incidents) is reported and the load continues.
+- `seed_pdi.py --history --resume` skips rows already in the PDI (by `correlation_id`) and appends to the map;
+  the history load prints a progress line with an ETA every 100 rows.
 ### Fixed
 - `ServiceNowClient._request` no longer tries to parse JSON from a `204 No Content` (or empty) body, so
   `scripts/reset_pdi.py` survives its first DELETE instead of crashing with `JSONDecodeError`.

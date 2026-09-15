@@ -3,13 +3,16 @@
     python scripts/seed_pdi.py                     # open set -> PDI; writes ground_truth.csv + data/eval/eval_set.jsonl
     python scripts/seed_pdi.py --history           # closed history only, with historical timestamps (best effort)
     python scripts/seed_pdi.py --history --limit 300 --sleep 0.2
+    python scripts/seed_pdi.py --history --resume   # continue an interrupted history load (skips rows already in the PDI)
     python scripts/seed_pdi.py --changes           # change records only -> change_request
     python scripts/seed_pdi.py --open --history --changes   # everything in one run
     python scripts/seed_pdi.py --attacks           # instructor only: red-team tickets
     python scripts/seed_pdi.py --dry-run --history # print the first payloads; nothing written
 
 Each target (--open, --history, --changes) loads only when asked; with no target the open set loads, so a
-history run never duplicates the open tickets. Not idempotent: run scripts/reset_pdi.py before re-seeding.
+history run never duplicates the open tickets. Not idempotent: run scripts/reset_pdi.py before re-seeding,
+except that --history --resume skips corpus rows whose correlation_id is already in the PDI. The full history
+is 4,242 inserts at roughly one round trip per second; a progress line with an ETA prints every 100 rows.
 The corpus CSVs stay authoritative: analytics and the eval harness read data/eval/, never the PDI (ADR-0002).
 
 Instance compatibility (ADR-0002, findings from the first load): the PDI refuses REST basic auth for any
@@ -147,17 +150,31 @@ def patch_dates(sn, sys_id: str, payload: dict) -> None:
     sn.update(tables.INCIDENT, sys_id, {f: payload[f] for f in DATE_FIELDS})
 
 
+def existing_history(sn, page: int = 1000) -> set[str]:
+    """Corpus numbers already loaded, read back from correlation_id (pages until a short page)."""
+    seen: set[str] = set()
+    offset = 0
+    while True:
+        batch = sn.list(tables.INCIDENT, "correlation_idSTARTSWITHSYN", ["correlation_id"], limit=page, offset=offset)
+        seen.update(r["correlation_id"] for r in batch if r.get("correlation_id"))
+        if len(batch) < page:
+            return seen
+        offset += page
+
+
 def load_history(sn, rows: list[dict], mark: str, resolve: Callable[[str], str], sleep: float = 0.0,
-                 map_path: Path = HISTORY_MAP) -> tuple[dict[str, bool], bool]:
+                 map_path: Path = HISTORY_MAP, append: bool = False, every: int = 100) -> tuple[dict[str, bool], bool]:
     """Insert closed incidents; probe the first, retry its dates with a PATCH, and keep patching only if honoured.
 
-    Returns (probe report for the insert, whether the PATCH restored the dates).
+    Returns (probe report for the insert, whether the PATCH restored the dates). Prints progress every `every` rows.
     """
     report: dict[str, bool] = {}
     patch = False
-    with map_path.open("w", newline="") as f:
+    started = time.monotonic()
+    with map_path.open("a" if append else "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["corpus_number", "sys_id", "number"])
-        w.writeheader()
+        if not append or f.tell() == 0:
+            w.writeheader()
         for i, row in enumerate(rows):
             payload = history_payload(row, mark, resolve)
             rec = sn.create(tables.INCIDENT, payload)
@@ -173,6 +190,12 @@ def load_history(sn, rows: list[dict], mark: str, resolve: Callable[[str], str],
             elif patch:
                 patch_dates(sn, rec["sys_id"], payload)
             w.writerow({"corpus_number": row["number"], "sys_id": rec["sys_id"], "number": rec["number"]})
+            f.flush()
+            if (i + 1) % every == 0 or i + 1 == len(rows):
+                elapsed = time.monotonic() - started
+                eta = elapsed / (i + 1) * (len(rows) - i - 1)
+                print(f"  {i + 1}/{len(rows)} history rows, {elapsed / 60:.1f} min elapsed, ~{eta / 60:.1f} min left",
+                      flush=True)
             time.sleep(sleep)
     return report, patch
 
@@ -184,6 +207,8 @@ def main() -> int:
     ap.add_argument("--changes", action="store_true", help="load change records")
     ap.add_argument("--attacks", action="store_true", help="instructor only: seed red-team tickets and exit")
     ap.add_argument("--limit", type=int, default=None, help="cap the number of history rows loaded")
+    ap.add_argument("--resume", action="store_true",
+                    help="history only: skip corpus rows whose correlation_id is already in the PDI")
     ap.add_argument("--sleep", type=float, default=0.0, help="seconds between inserts (PDI rate limits)")
     ap.add_argument("--dry-run", action="store_true", help="print the first payloads and exit")
     ap.add_argument("--seed", type=int, default=None, help="holdout split seed (default: patterns.yaml seed)")
@@ -233,11 +258,15 @@ def main() -> int:
         print(f"seeded {len(open_rows)} open tickets; ground truth -> {GT_PATH}; eval set -> {EVAL_SET}")
 
     # -- closed history: best effort; the CSV stays authoritative --------------------------------------------
+    if history_rows and a.resume:
+        done = existing_history(sn)
+        history_rows = [r for r in history_rows if r["number"] not in done]
+        print(f"resume: {len(done)} history rows already in the PDI, {len(history_rows)} to load", flush=True)
     if history_rows:
         resolve = close_code_resolver(sn)
         mapped = {c: resolve(c) for c in sorted({r["close_code"] for r in history_rows})}
-        print("close_code mapping for this instance:", mapped)
-        report, patched = load_history(sn, history_rows, mark, resolve, a.sleep)
+        print("close_code mapping for this instance:", mapped, flush=True)
+        report, patched = load_history(sn, history_rows, mark, resolve, a.sleep, append=a.resume)
         print(f"loaded {len(history_rows)} closed incidents; map -> {HISTORY_MAP} (gitignored)")
         if all(report.get(d) for d in DATE_FIELDS):
             print("NOTE: opened_at/resolved_at/closed_at honoured on insert; sys_created_on "
