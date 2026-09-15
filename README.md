@@ -47,7 +47,8 @@ The PDI refuses REST basic auth for interactive users, so `.env` must name a non
 
 ```bash
 python scripts/seed_pdi.py              # open set -> PDI; ground truth -> data/synthetic/ground_truth.csv
-python scripts/seed_pdi.py --history    # also load the closed history (best effort; see ADR-0002)
+python scripts/seed_pdi.py --history    # closed history; the PDI stamps its timestamps, so join
+                                        # correlation_id to data/eval/incidents_history.csv (ADR-0002)
 python scripts/seed_pdi.py --changes    # change records
 python scripts/seed_pdi.py --attacks    # instructor only: red-team tickets
 python scripts/reset_pdi.py             # removes everything the seeder created

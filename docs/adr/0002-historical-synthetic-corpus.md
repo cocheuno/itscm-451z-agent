@@ -76,8 +76,35 @@ probe shows the field was honoured, nothing changes; the CSV is still authoritat
   post-Utah defaults ("Solution provided", "Workaround provided", "No resolution provided").
 - **Open set and history are separate targets** (`--open`, `--history`, `--changes`) so a history run never
   re-inserts the 150 open tickets; the first attempt did, and `reset_pdi.py` was needed before retrying.
-- **`sys_created_on` probe:** pending; the first successful `--history` run prints the sent-versus-stored table,
-  to be pasted here.
+- **The instance stamps every timestamp on insert, not just `sys_created_on`.** First successful `--history`
+  run (2026-09-15, `agent_svc`, `--limit 50`), sent versus stored on the first record:
+
+  | field | sent | stored | |
+  |---|---|---|---|
+  | `sys_created_on` | 2026-03-01 10:28:47 | 2026-09-15 01:37:20 | overridden |
+  | `opened_at` | 2026-03-01 10:28:47 | 2026-09-15 01:37:20 | overridden |
+  | `resolved_at` | 2026-03-03 14:09:47 | 2026-09-15 01:37:20 | overridden |
+  | `closed_at` | 2026-03-05 22:43:08 | 2026-09-15 01:37:20 | overridden |
+  | `state` | 7 | 7 | honoured |
+  | `close_code` | Solution provided | Solution provided | honoured |
+
+  Close-code mapping printed by the same run: `Solved (Permanently)` and `Solved Remotely (Permanently)` to
+  `Solution provided`, `Solved (Work Around)` to `Workaround provided`, `Not Solved (Not Reproducible)` to
+  `No resolution provided`.
+
+  The expectation in point 5 above and in the investigation section, that `opened_at`, `resolved_at` and
+  `closed_at` would be honoured as ordinary writable fields, was wrong for this instance: inserting a record
+  directly in state 7 (Closed) runs the incident lifecycle rules, which stamp the open, resolve and close times
+  with the insert time. The cause was not isolated further (candidates: the closed-state business rules, a
+  field-level write ACL for the service account); it does not matter for the course, because the brief already
+  fixes the fallback. The seeder now also tries one PATCH of the three date fields after the first insert and
+  keeps patching every row only if the instance honours the update; the second run will show which.
+
+  **Decision (per the brief's fallback):** `data/eval/incidents_history.csv` is the only source of time for the
+  historical analytics. The PDI copy of the history is for text, routing and demo work, and every PDI history
+  record stores its corpus number in `correlation_id` so the student can join it back to the CSV with one
+  merge. The rung-0 poller's `sys_created_on` watermark is unaffected, since the open set is inserted live and
+  its creation time is its true arrival time.
 
 ## Alternatives considered
 - LLM-paraphrased cluster text: better prose, but non-deterministic, needs an API key in CI, and costs money on
