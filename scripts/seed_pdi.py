@@ -16,8 +16,10 @@ Instance compatibility (ADR-0002, findings from the first load): the PDI refuses
 interactive user, so SN_USER must be a non-interactive service account (web_service_access_only +
 internal_integration_user, roles itil + itil_admin). Closed incidents must carry a close code the instance
 knows; the choice list changed in Utah, so this script reads incident.close_code from sys_choice and maps the
-corpus values onto it. ServiceNow protects sys_created_on on insert, so history rows carry their true
-timestamps in opened_at / resolved_at / closed_at; the first insert is read back and the honoured fields reported.
+corpus values onto it. The instance stamps sys_created_on, opened_at, resolved_at and closed_at with the insert
+time (first load, 2026-09-15), so the history in the PDI carries no usable timestamps: the first insert is read
+back and reported, a PATCH of the date fields is tried once and kept only if the instance honours it, and every
+history record stores its corpus number in correlation_id so it can be joined back to the CSV.
 """
 from __future__ import annotations
 
@@ -45,7 +47,8 @@ GT_FIELDS = ["sys_id", "number", "corpus_number", "gt_category", "gt_subcategory
 # ServiceNow's default incident.category choice values; anything else is sent verbatim.
 SN_CATEGORY = {"Network": "network", "Hardware": "hardware", "Software": "software", "Database": "database",
                "Inquiry / Help": "inquiry", "Security": "security"}
-PROBE_FIELDS = ["sys_created_on", "opened_at", "resolved_at", "closed_at", "state", "close_code"]
+DATE_FIELDS = ["opened_at", "resolved_at", "closed_at"]
+PROBE_FIELDS = ["sys_created_on", *DATE_FIELDS, "state", "close_code", "correlation_id"]
 # incident.close_code choices from Utah onward, keyed by the legacy labels the corpus uses. Used only when the
 # live choice list cannot be read; otherwise the resolver matches against the instance directly.
 CLOSE_CODE_FALLBACK = {
@@ -112,6 +115,8 @@ def history_payload(row: dict, mark: str, close_code: Callable[[str], str] = lam
         "closed_at": row["closed_at"], "close_code": close_code(row["close_code"]), "close_notes": row["close_notes"],
         "reassignment_count": int(row["reassignment_count"]), "reopen_count": int(row["reopen_count"]),
         "made_sla": row["made_sla"],
+        # Join key back to data/eval/incidents_history.csv; the PDI copy has no usable timestamps (ADR-0002).
+        "correlation_id": row["number"],
         # Probe: system field. Expected to be ignored/overwritten by the platform (ADR-0002); reported below.
         "sys_created_on": row["opened_at"],
     }
@@ -123,15 +128,49 @@ def change_payload(row: dict, mark: str) -> dict:
             "start_date": row["start"], "end_date": row["end"], "close_code": row["close_code"], "state": 3}
 
 
-def probe_backdating(sn, sys_id: str, payload: dict) -> dict[str, bool]:
-    stored = sn.get(tables.INCIDENT, sys_id, PROBE_FIELDS)
+def _compare(sn, sys_id: str, payload: dict, fields: list[str], title: str) -> dict[str, bool]:
+    stored = sn.get(tables.INCIDENT, sys_id, fields)
     report = {}
-    print("backdating probe (sent -> stored):")
-    for f in PROBE_FIELDS:
+    print(f"{title} (sent -> stored):")
+    for f in fields:
         honoured = str(stored.get(f, "")) == str(payload.get(f, ""))
         report[f] = honoured
         print(f"  {f:16s} {payload.get(f)!s:22s} -> {stored.get(f)!s:22s} {'honoured' if honoured else 'OVERRIDDEN'}")
     return report
+
+
+def probe_backdating(sn, sys_id: str, payload: dict) -> dict[str, bool]:
+    return _compare(sn, sys_id, payload, PROBE_FIELDS, "backdating probe")
+
+
+def patch_dates(sn, sys_id: str, payload: dict) -> None:
+    sn.update(tables.INCIDENT, sys_id, {f: payload[f] for f in DATE_FIELDS})
+
+
+def load_history(sn, rows: list[dict], mark: str, resolve: Callable[[str], str], sleep: float = 0.0,
+                 map_path: Path = HISTORY_MAP) -> tuple[dict[str, bool], bool]:
+    """Insert closed incidents; probe the first, retry its dates with a PATCH, and keep patching only if honoured.
+
+    Returns (probe report for the insert, whether the PATCH restored the dates).
+    """
+    report: dict[str, bool] = {}
+    patch = False
+    with map_path.open("w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=["corpus_number", "sys_id", "number"])
+        w.writeheader()
+        for i, row in enumerate(rows):
+            payload = history_payload(row, mark, resolve)
+            rec = sn.create(tables.INCIDENT, payload)
+            if i == 0:
+                report = probe_backdating(sn, rec["sys_id"], payload)
+                if not all(report[d] for d in DATE_FIELDS):
+                    patch_dates(sn, rec["sys_id"], payload)
+                    patch = all(_compare(sn, rec["sys_id"], payload, DATE_FIELDS, "after PATCH").values())
+            elif patch:
+                patch_dates(sn, rec["sys_id"], payload)
+            w.writerow({"corpus_number": row["number"], "sys_id": rec["sys_id"], "number": rec["number"]})
+            time.sleep(sleep)
+    return report, patch
 
 
 def main() -> int:
@@ -194,20 +233,17 @@ def main() -> int:
         resolve = close_code_resolver(sn)
         mapped = {c: resolve(c) for c in sorted({r["close_code"] for r in history_rows})}
         print("close_code mapping for this instance:", mapped)
-        report: dict[str, bool] = {}
-        with HISTORY_MAP.open("w", newline="") as f:
-            w = csv.DictWriter(f, fieldnames=["corpus_number", "sys_id", "number"])
-            w.writeheader()
-            for i, row in enumerate(history_rows):
-                payload = history_payload(row, mark, resolve)
-                rec = sn.create(tables.INCIDENT, payload)
-                if i == 0:
-                    report = probe_backdating(sn, rec["sys_id"], payload)
-                w.writerow({"corpus_number": row["number"], "sys_id": rec["sys_id"], "number": rec["number"]})
-                time.sleep(a.sleep)
+        report, patched = load_history(sn, history_rows, mark, resolve, a.sleep)
         print(f"loaded {len(history_rows)} closed incidents; map -> {HISTORY_MAP} (gitignored)")
-        if not report.get("sys_created_on"):
-            print("NOTE: sys_created_on was not honoured; analytics must key on opened_at (see ADR-0002)")
+        if all(report.get(d) for d in DATE_FIELDS):
+            print("NOTE: opened_at/resolved_at/closed_at honoured on insert; sys_created_on "
+                  f"{'honoured' if report.get('sys_created_on') else 'stamped by the platform'} (ADR-0002)")
+        elif patched:
+            print("NOTE: insert stamped the timestamps; a PATCH after insert restored them and was applied to every row")
+        else:
+            print("NOTE: the instance stamps opened_at/resolved_at/closed_at on insert and on update, so the PDI "
+                  "history has no usable timestamps. Join correlation_id (= corpus number) to "
+                  "data/eval/incidents_history.csv for time-based analytics (ADR-0002)")
 
     if change_rows:
         for row in change_rows:
