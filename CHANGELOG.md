@@ -12,6 +12,8 @@ All notable changes to this project are documented here. Format: Keep a Changelo
   and artifact plumbing around a `TODO(student)` pipeline, `predict.py`), harness dispatch for rung 1, an EDA
   starter notebook, a pagination acceptance test, and handouts for the Sep 15 and Sep 17 sessions under
   `docs/exercises/`.
+- Module 3 lecture notes (`docs/lectures/03-sla-rung1-eval-prs.md`): SLAs and customer communication, Rung 1
+  classification versus the priority rule, the eval set and ground truth, feature branches and PRs.
 ### Changed
 - PDI history records carry their corpus number in `correlation_id`; the instance stamps all four timestamps on
   insert, so `data/eval/incidents_history.csv` is the only source of time for analytics (ADR-0002 findings).
