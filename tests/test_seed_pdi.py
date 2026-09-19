@@ -190,3 +190,14 @@ def test_load_history_resume_appends_and_reports_progress(tmp_path, capsys):
     assert lines[-1].startswith("SYN0000005,")
     out = capsys.readouterr().out
     assert "2/3 history rows" in out and "3/3 history rows" in out and "min left" in out
+
+
+def test_kb_and_ci_payloads_carry_the_marker_where_reset_can_find_it():
+    seed = load_seeder()
+    kb = seed.kb_payload({"title": "VPN drops", "text": "Symptoms: a\nChecks: b", "resolution": "Fix", "keywords": ["vpn"]},
+                         "[SYN]")
+    assert kb["short_description"] == "[SYN] VPN drops" and kb["workflow_state"] == "published"
+    assert kb["text"].startswith("<p>Symptoms: a Checks: b Resolution: Fix") and kb["meta"] == "vpn"
+    ci = seed.ci_payload({"name": "VPN-GW-01", "sys_class_name": "cmdb_ci_netgear", "operational_status": 1,
+                          "ip_address": "10.0.0.1", "support_group": "Network Ops", "description": "gateway"}, "[SYN]")
+    assert ci["name"] == "VPN-GW-01" and ci["short_description"] == "[SYN] gateway" and ci["support_group"] == "Network Ops"

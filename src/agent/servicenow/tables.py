@@ -8,6 +8,7 @@ PROBLEM = "problem"
 KB = "kb_knowledge"
 CI = "cmdb_ci"
 CHOICE = "sys_choice"  # choice lists (used by the seeder to match the instance release)
+USER_GROUP = "sys_user_group"
 
 INCIDENT_FIELDS = ["sys_id", "number", "short_description", "description", "category", "subcategory",
                    "impact", "urgency", "priority", "state", "assignment_group", "assigned_to", "cmdb_ci",

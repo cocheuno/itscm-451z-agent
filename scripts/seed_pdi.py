@@ -5,6 +5,7 @@
     python scripts/seed_pdi.py --history --limit 300 --sleep 0.2
     python scripts/seed_pdi.py --history --resume   # continue an interrupted history load (skips rows already in the PDI)
     python scripts/seed_pdi.py --changes           # change records only -> change_request
+    python scripts/seed_pdi.py --groups --cis --kb  # Module 5: assignment groups, CMDB items, knowledge articles
     python scripts/seed_pdi.py --open --history --changes   # everything in one run
     python scripts/seed_pdi.py --attacks           # instructor only: red-team tickets
     python scripts/seed_pdi.py --dry-run --history # print the first payloads; nothing written
@@ -36,11 +37,15 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from agent.servicenow import tables  # noqa: E402
 
 GENERATOR = ROOT / "data" / "synthetic" / "generate_tickets.py"
+KB_YAML = ROOT / "data" / "synthetic" / "kb.yaml"
+CIS_YAML = ROOT / "data" / "synthetic" / "cis.yaml"
 EVAL_DIR = ROOT / "data" / "eval"
 GT_PATH = ROOT / "data" / "synthetic" / "ground_truth.csv"
 HISTORY_MAP = ROOT / "data" / "synthetic" / "history_pdi_map.csv"  # gitignored
@@ -125,6 +130,20 @@ def history_payload(row: dict, mark: str, close_code: Callable[[str], str] = lam
     }
 
 
+def kb_payload(article: dict, mark: str) -> dict:
+    """A published knowledge article. The marker goes in the title: kb_knowledge has no description field to mark."""
+    body = article["text"].strip().replace("\n", " ") + f" Resolution: {article['resolution']}"
+    return {"short_description": f"{mark} {article['title']}", "text": f"<p>{body}</p>",
+            "workflow_state": "published", "meta": " ".join(article.get("keywords", []))}
+
+
+def ci_payload(item: dict, mark: str) -> dict:
+    """A CMDB item. Reference fields (support_group) are given by display name; create with display_values=True."""
+    return {"name": item["name"], "sys_class_name": item["sys_class_name"],
+            "operational_status": int(item["operational_status"]), "ip_address": item.get("ip_address", ""),
+            "support_group": item.get("support_group", ""), "short_description": f"{mark} {item['description']}"}
+
+
 def change_payload(row: dict, mark: str) -> dict:
     return {"number": row["number"], "short_description": row["short_description"],
             "description": f"{mark} synthetic change record from data/eval/changes.csv", "type": row["type"],
@@ -205,6 +224,9 @@ def main() -> int:
     ap.add_argument("--open", action="store_true", help="load the open set (default when no other target is given)")
     ap.add_argument("--history", action="store_true", help="load closed incidents (best effort backdating)")
     ap.add_argument("--changes", action="store_true", help="load change records")
+    ap.add_argument("--groups", action="store_true", help="create the six assignment groups (sys_user_group)")
+    ap.add_argument("--cis", action="store_true", help="load the CMDB items from data/synthetic/cis.yaml")
+    ap.add_argument("--kb", action="store_true", help="load the knowledge articles from data/synthetic/kb.yaml")
     ap.add_argument("--attacks", action="store_true", help="instructor only: seed red-team tickets and exit")
     ap.add_argument("--limit", type=int, default=None, help="cap the number of history rows loaded")
     ap.add_argument("--resume", action="store_true",
@@ -218,18 +240,25 @@ def main() -> int:
     _, pat = gen.load_config()
     mark = gen.MARK
     rng = random.Random(pat["seed"] if a.seed is None else a.seed)
-    load_open = a.open or not (a.history or a.changes)
+    load_open = a.open or not (a.history or a.changes or a.groups or a.cis or a.kb)
     open_rows = read_csv(EVAL_DIR / "incidents_open.csv") if load_open else []
     history_rows = read_csv(EVAL_DIR / "incidents_history.csv")[: a.limit] if a.history else []
     change_rows = read_csv(EVAL_DIR / "changes.csv") if a.changes else []
+    cis_cfg = yaml.safe_load(CIS_YAML.read_text()) if (a.cis or a.groups) else {"items": [], "groups": []}
+    ci_items = cis_cfg["items"] if a.cis else []
+    group_names = cis_cfg["groups"] if a.groups else []
+    kb_articles = yaml.safe_load(KB_YAML.read_text())["articles"] if a.kb else []
 
     if a.dry_run:
         print(json.dumps({"open": [open_payload(r, mark) for r in open_rows[:2]],
                           "history": [history_payload(r, mark) for r in history_rows[:2]],
                           "changes": [change_payload(r, mark) for r in change_rows[:2]],
+                          "groups": group_names[:2], "cis": [ci_payload(i, mark) for i in ci_items[:2]],
+                          "kb": [kb_payload(x, mark) for x in kb_articles[:1]],
                           "attacks": [t["short_description"] for t in gen.attack_tickets()] if a.attacks else []},
                          indent=2))
-        print(f"... dry run: {len(open_rows)} open, {len(history_rows)} history, {len(change_rows)} changes")
+        print(f"... dry run: {len(open_rows)} open, {len(history_rows)} history, {len(change_rows)} changes, "
+              f"{len(group_names)} groups, {len(ci_items)} cis, {len(kb_articles)} kb")
         return 0
 
     from agent.servicenow.client import ServiceNowClient  # noqa: E402  (needs .env)
@@ -283,6 +312,28 @@ def main() -> int:
             sn.create(tables.CHANGE, change_payload(row, mark))
             time.sleep(a.sleep)
         print(f"loaded {len(change_rows)} change records")
+
+    # -- Module 5: groups, CMDB items, knowledge articles (idempotent: existing names are skipped) -------------
+    if group_names:
+        made = 0
+        for name in group_names:
+            if not sn.list(tables.USER_GROUP, f"name={name}", ["sys_id"], limit=1):
+                sn.create(tables.USER_GROUP, {"name": name, "description": f"{mark} assignment group"})
+                made += 1
+        print(f"groups: {made} created, {len(group_names) - made} already existed")
+    if ci_items:
+        made = 0
+        for item in ci_items:
+            if not sn.list(tables.CI, f"name={item['name']}", ["sys_id"], limit=1):
+                sn.create(tables.CI, ci_payload(item, mark), display_values=True)
+                made += 1
+            time.sleep(a.sleep)
+        print(f"cis: {made} created, {len(ci_items) - made} already existed")
+    if kb_articles:
+        for article in kb_articles:
+            sn.create(tables.KB, kb_payload(article, mark))
+            time.sleep(a.sleep)
+        print(f"loaded {len(kb_articles)} knowledge articles (workflow_state=published requested; check one in the UI)")
     return 0
 
 

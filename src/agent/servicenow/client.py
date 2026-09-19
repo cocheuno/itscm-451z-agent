@@ -68,8 +68,11 @@ class ServiceNowClient:
         params = {"sysparm_fields": ",".join(fields)} if fields else None
         return self._request("GET", f"{self.base}/{table}/{sys_id}", params=params)["result"]
 
-    def create(self, table: str, payload: dict) -> dict:
-        return self._request("POST", f"{self.base}/{table}", json=payload)["result"]
+    def create(self, table: str, payload: dict, *, display_values: bool = False) -> dict:
+        """Insert a record. display_values=True lets reference fields be given by display name
+        (e.g. support_group="Network Ops") instead of sys_id; the instance resolves them."""
+        params = {"sysparm_input_display_value": "true"} if display_values else None
+        return self._request("POST", f"{self.base}/{table}", json=payload, params=params)["result"]
 
     def update(self, table: str, sys_id: str, payload: dict) -> dict:
         """TODO(student, Module 8): capture a before-image of the fields in payload before PATCHing,

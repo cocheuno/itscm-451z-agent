@@ -61,3 +61,9 @@ def test_4xx_raises_with_body():
     sn, _ = make_client(FakeResponse(403, b'{"error": {"message": "Data Policy Exception"}}'))
     with pytest.raises(ServiceNowError, match="403.*Data Policy"):
         sn.create("incident", {})
+
+
+def test_create_can_ask_for_display_value_resolution():
+    sn, fake = make_client(FakeResponse(200, b'{"result": {"sys_id": "1"}}'))
+    sn.create("cmdb_ci", {"name": "X", "support_group": "Network Ops"}, display_values=True)
+    assert fake.calls == [("POST", "https://example.service-now.com/api/now/table/cmdb_ci")]
