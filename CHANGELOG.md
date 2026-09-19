@@ -14,6 +14,12 @@ All notable changes to this project are documented here. Format: Keep a Changelo
   `docs/exercises/`.
 - Module 3 lecture notes (`docs/lectures/03-sla-rung1-eval-prs.md`): SLAs and customer communication, Rung 1
   classification versus the priority rule, the eval set and ground truth, feature branches and PRs.
+- Lectures rewritten as complete walkthroughs (`docs/lectures/`): Module 2 close-out, Module 3, and the two
+  Module 4 sessions (gradient boosting and the LLM classifier; the bake-off, memo and v0.1).
+- Rung 1 scaffolding for the bake-off: `scripts/bakeoff.py` (one comparison table over the eval set),
+  `agent.analytics.llm_classify` (raw-HTTP Anthropic classifier with schema-enforced labels and per-call cost),
+  `train.py --pipeline lr|gbm`, `CATEGORY_MODEL_VERSION` pin in `predict`, and the harness joining ticket inputs
+  (impact, urgency, short_description) into the eval rows so `priority_sla_agreement` can be met.
 ### Changed
 - PDI history records carry their corpus number in `correlation_id`; the instance stamps all four timestamps on
   insert, so `data/eval/incidents_history.csv` is the only source of time for analytics (ADR-0002 findings).

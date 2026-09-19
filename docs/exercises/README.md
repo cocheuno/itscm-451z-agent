@@ -1,7 +1,8 @@
 # In-class exercises
 
 One file per session. Each ends in a pull request, because Git practice is graded content
-(COURSE_CONTEXT.md). Rubrics are checklists; the instructor sets point values.
+(COURSE_CONTEXT.md). Rubrics are checklists; the instructor sets point values. The walkthrough for each
+session is the matching lecture in `docs/lectures/`.
 
 | Date | Session | Rung | Deliverable |
 |---|---|---|---|

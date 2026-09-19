@@ -1,6 +1,7 @@
 # Tuesday, Sep 15: "Make the agent see the data" (Rung 0 close-out)
 
-About 75 minutes. Three parts, one PR at the end, then tag `v0.0`.
+About 75 minutes. Three parts, one PR at the end, then tag `v0.0`. This page is the checklist and rubric;
+the step-by-step walkthrough with expected output is the [Module 2 lecture](../lectures/02-rung0-closeout.md).
 
 ## Where we are
 

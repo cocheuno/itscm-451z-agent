@@ -40,9 +40,23 @@ def test_time_split_refuses_an_empty_side():
         features.time_split(df, "2027-01-01")
 
 
-def test_build_pipeline_is_the_student_todo():
-    with pytest.raises(NotImplementedError, match="TODO\\(student\\)"):
-        train.build_pipeline()
+def test_build_pipeline_rejects_unknown_kinds():
+    with pytest.raises(ValueError, match="unknown pipeline"):
+        train.build_pipeline("svm")
+
+
+@pytest.mark.parametrize("kind", train.PIPELINES)
+def test_build_pipeline_returns_a_fit_predict_pipeline_once_implemented(kind):
+    """Skips while the TODO(student) is open; once implemented, each kind must be an unfitted sklearn pipeline."""
+    try:
+        pipe = train.build_pipeline(kind)
+    except NotImplementedError:
+        pytest.skip(f"TODO(student): build_pipeline({kind!r}) not implemented yet")
+    assert hasattr(pipe, "fit") and hasattr(pipe, "predict")
+    df = features.load_history(FIXTURE)
+    train_df, test_df = features.time_split(df, "2026-08-01")
+    metrics = train.fit_and_evaluate(pipe, train_df, test_df)
+    assert 0.0 <= metrics["accuracy"] <= 1.0
 
 
 def test_fit_evaluate_save_and_predict_round_trip(tmp_path):
@@ -80,3 +94,16 @@ def test_predict_without_a_model_is_explicit(tmp_path):
     assert predict.versions(tmp_path) == []
     with pytest.raises(FileNotFoundError, match="agent.analytics.train"):
         predict.classify({"short_description": "x"}, models_dir=tmp_path)
+
+
+def test_selected_version_prefers_the_pin_and_falls_back_to_newest(tmp_path, monkeypatch):
+    for v in ("0.1", "0.2"):
+        (tmp_path / f"category-v{v}.joblib").write_bytes(b"x")
+        (tmp_path / f"category-v{v}.json").write_text("{}")
+    monkeypatch.delenv("CATEGORY_MODEL_VERSION", raising=False)
+    assert predict.selected_version(tmp_path) == "0.2"
+    monkeypatch.setenv("CATEGORY_MODEL_VERSION", "0.1")
+    assert predict.selected_version(tmp_path) == "0.1"
+    monkeypatch.setenv("CATEGORY_MODEL_VERSION", "9.9")
+    with pytest.raises(FileNotFoundError, match="CATEGORY_MODEL_VERSION=9.9"):
+        predict.selected_version(tmp_path)

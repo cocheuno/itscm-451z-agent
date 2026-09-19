@@ -20,13 +20,29 @@ from eval import metrics
 
 ROOT = Path(__file__).resolve().parents[1]
 EVAL_SET = ROOT / "data" / "eval" / "eval_set.jsonl"
+OPEN_SET = ROOT / "data" / "eval" / "incidents_open.csv"
 THRESH = ROOT / "eval" / "thresholds.yaml"
+# The ticket fields an entry point may read. Ground truth (gt_*) is already in the eval set; these are the inputs.
+INPUT_FIELDS = ("short_description", "description", "impact", "urgency", "contact_type")
 
 
-def load_eval_set(path: Path = EVAL_SET) -> list[dict]:
+def load_eval_set(path: Path = EVAL_SET, open_set: Path = OPEN_SET) -> list[dict]:
+    """The holdout rows written by scripts/seed_pdi.py, joined on corpus_number to the ticket inputs.
+
+    seed_pdi.py records sys_id, number, corpus_number and the gt_* columns; the inputs (impact, urgency,
+    short_description, ...) come from data/eval/incidents_open.csv so the eval set never has to be re-seeded
+    when an entry point needs another field.
+    """
     if not path.exists():
         return []
-    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    if open_set.exists():
+        import csv
+
+        with open_set.open(newline="") as f:
+            inputs = {r["number"]: {k: r[k] for k in INPUT_FIELDS if k in r} for r in csv.DictReader(f)}
+        rows = [{**inputs.get(r.get("corpus_number"), {}), **r} for r in rows]
+    return rows
 
 
 def run_rung(rung: str, rows: list[dict], fixtures: bool) -> list[dict]:

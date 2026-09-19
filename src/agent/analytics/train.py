@@ -2,6 +2,7 @@
 
     python -m agent.analytics.train --version 0.1 --adr ADR-0003
     python -m agent.analytics.train --version 0.1 --adr ADR-0003 --cutoff 2026-08-01
+    python -m agent.analytics.train --version 0.2 --adr ADR-0004 --pipeline gbm
 
 TODO(student, Module 3): implement build_pipeline(). Everything else here is plumbing you can keep.
 """
@@ -23,13 +24,22 @@ MODELS_DIR = Path(__file__).resolve().parents[1] / "models"
 TASK = "category"
 
 
-def build_pipeline():
-    """TODO(student, Module 3): return an unfitted sklearn Pipeline: text -> TF-IDF -> logistic regression.
+PIPELINES = ("lr", "gbm")
 
-    Start with TfidfVectorizer (word 1-2 grams, min_df=2, sublinear_tf=True) into
-    LogisticRegression(max_iter=1000, class_weight="balanced"). Fit on features.text_of() strings; predict
-    the category label. A1 adds gradient boosting and an LLM classifier as further rows of the bake-off.
+
+def build_pipeline(kind: str = "lr"):
+    """TODO(student, Module 3): return an unfitted sklearn Pipeline for `kind`.
+
+    "lr" (Module 3): TfidfVectorizer(ngram_range=(1, 2), min_df=2, sublinear_tf=True) into
+        LogisticRegression(max_iter=1000, class_weight="balanced").
+    "gbm" (Module 4): the same TfidfVectorizer, then TruncatedSVD(n_components=50, random_state=451) so the
+        trees see 50 dense columns, then HistGradientBoostingClassifier(random_state=451). (50 rather than
+        100 components keeps the artifact under 3 MB; the accuracy difference is within noise.)
+    Both fit on features.text_of() strings and predict the category label. The lecture notes in
+    docs/lectures/ walk through each line.
     """
+    if kind not in PIPELINES:
+        raise ValueError(f"unknown pipeline {kind!r}; choose from {PIPELINES}")
     raise NotImplementedError("build_pipeline: see TODO(student) in src/agent/analytics/train.py")
 
 
@@ -81,7 +91,7 @@ def save(pipeline, card: dict, models_dir: Path = MODELS_DIR) -> tuple[Path, Pat
     models_dir.mkdir(parents=True, exist_ok=True)
     stem = f"{card['task']}-v{card['version']}"
     artifact, card_path = models_dir / f"{stem}.joblib", models_dir / f"{stem}.json"
-    joblib.dump(pipeline, artifact)
+    joblib.dump(pipeline, artifact, compress=3)  # trees and SVD components compress well; ~40% smaller
     card_path.write_text(json.dumps(card, indent=2) + "\n")
     return artifact, card_path
 
@@ -103,15 +113,17 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--version", required=True, help="artifact version, e.g. 0.1")
     ap.add_argument("--adr", required=True, help="the ADR that records the split and the model choice")
     ap.add_argument("--cutoff", default=features.DEFAULT_CUTOFF)
+    ap.add_argument("--pipeline", default="lr", choices=PIPELINES, help="which build_pipeline() variant to train")
     a = ap.parse_args(argv)
 
     df = features.load_history()
     train, test = features.time_split(df, a.cutoff)
     print(f"train {len(train)} rows (opened_at < {a.cutoff}), test {len(test)} rows")
-    pipeline = build_pipeline()
+    pipeline = build_pipeline(a.pipeline)
     metrics = fit_and_evaluate(pipeline, train, test)
     print_report(metrics)
     card = model_card(a.version, a.cutoff, train, test, metrics, a.adr, pipeline=pipeline)
+    card["kind"] = a.pipeline
     artifact, card_path = save(pipeline, card)
     size_mb = artifact.stat().st_size / 1e6
     shown = artifact.relative_to(features.ROOT) if artifact.is_relative_to(features.ROOT) else artifact

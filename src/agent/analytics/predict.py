@@ -6,6 +6,7 @@ AuditEntry (tool="classify_incident", tier="read"); this module stays a pure fun
 from __future__ import annotations
 
 import json
+import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -27,15 +28,30 @@ def available(models_dir: Path = MODELS_DIR) -> bool:
     return bool(versions(models_dir))
 
 
+def selected_version(models_dir: Path = MODELS_DIR) -> str | None:
+    """The version the agent serves: CATEGORY_MODEL_VERSION from .env if set, else the newest available.
+
+    The bake-off memo (A1) names the chosen model; pinning it here makes that choice configuration rather
+    than "whatever was trained last".
+    """
+    pinned = os.getenv("CATEGORY_MODEL_VERSION", "").strip()
+    avail = versions(models_dir)
+    if pinned:
+        if pinned not in avail:
+            raise FileNotFoundError(f"CATEGORY_MODEL_VERSION={pinned} but only {avail or 'no versions'} exist "
+                                    f"under {models_dir}")
+        return pinned
+    return avail[-1] if avail else None
+
+
 @lru_cache(maxsize=4)
 def load(version: str | None = None, models_dir: Path = MODELS_DIR):
-    """(pipeline, card) for a version, or the newest one. Raises FileNotFoundError when nothing is trained."""
+    """(pipeline, card) for a version, the pinned one, or the newest. Raises FileNotFoundError when nothing is trained."""
     import joblib
 
-    avail = versions(models_dir)
-    if not avail:
+    version = version or selected_version(models_dir)
+    if version is None:
         raise FileNotFoundError(f"no {TASK} model under {models_dir}; run python -m agent.analytics.train")
-    version = version or avail[-1]
     stem = f"{TASK}-v{version}"
     return joblib.load(models_dir / f"{stem}.joblib"), json.loads((models_dir / f"{stem}.json").read_text())
 

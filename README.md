@@ -57,7 +57,8 @@ python scripts/reset_pdi.py             # removes everything the seeder created
 
 ## Lectures and in-class exercises
 
-Lecture notes under `docs/lectures/` and one handout per session under `docs/exercises/`, each ending in a PR. The Rung 1 scaffolding lives in
+Lecture notes under `docs/lectures/` are complete walkthroughs (why, every step, expected output); the handouts
+under `docs/exercises/` are the checklists and rubrics. Each session ends in a PR. The Rung 1 scaffolding lives in
 `src/agent/analytics/` (features, train, predict) and `notebooks/`.
 
 ## Run the eval harness
