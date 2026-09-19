@@ -12,7 +12,8 @@ logs/
 eval/reports/*
 !eval/reports/.gitkeep
 data/synthetic/ground_truth.csv
-data/eval/eval_set.jsonl          # written per machine by scripts/seed_pdi.py; carries local sys_ids
+# written per machine by scripts/seed_pdi.py; carries local sys_ids (reference copy: data/eval/eval_set.jsonl)
+data/synthetic/eval_set.jsonl
 # editors
 .vscode/settings.json
 .idea/

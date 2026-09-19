@@ -155,13 +155,16 @@ python scripts/seed_pdi.py
 Expected output (paths will be yours):
 
 ```
-seeded 150 open tickets; ground truth -> .../data/synthetic/ground_truth.csv; eval set -> .../data/eval/eval_set.jsonl
+seeded 150 open tickets; ground truth -> .../data/synthetic/ground_truth.csv; eval set -> .../data/synthetic/eval_set.jsonl
 ```
 
 Two files were written on your laptop. `ground_truth.csv` maps each ticket in your PDI to its correct answers
 (git-ignored; it is the answer key). `eval_set.jsonl` is the 40 tickets held out for scoring; the number is
-40 rather than exactly 30 because the 20 percent holdout is drawn ticket by ticket with a fixed seed. Note
-the time you ran this; it is the watermark for step 4.
+40 rather than exactly 30 because the 20 percent holdout is drawn ticket by ticket with a fixed seed. Both
+files are git-ignored because they carry the sys_ids of *your* PDI. A reference copy of the eval set, with
+the same 40 tickets and answers, is committed at `data/eval/eval_set.jsonl`; the harness reads your local
+copy when it exists and the committed one otherwise, and scores the same either way. Note the time you ran
+this; it is the watermark for step 4.
 
 If you have seeded before and want a clean start: `python scripts/reset_pdi.py` deletes every record the
 seeder created (they all start with the `[SYN]` marker) and nothing else.
