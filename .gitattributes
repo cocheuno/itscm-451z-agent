@@ -1,0 +1,5 @@
+# Keep every text file LF on every platform, so a Windows checkout never shows 36 "modified" files
+# after an editor rewrites line endings. Binary artifacts are left alone.
+* text=auto eol=lf
+*.joblib binary
+*.png binary
