@@ -1,6 +1,6 @@
-# Module 4, session 2: the bake-off, the memo, and tag v0.1
+# Module 4, session 2: build review and the first tagged release
 
-Thursday, Sep 24. A1 is due today. Prerequisite: the session 1 PR (`feature/rung1-bakeoff-models`) is
+Thursday, Sep 24. Syllabus: "build review; first tagged release". A1 is due today. Prerequisite: the session 1 PR (`feature/rung1-bakeoff-models`) is
 merged. About 45 minutes of guided work, then the A1 PR and the tag.
 
 ## What you will be able to do afterwards
@@ -37,6 +37,24 @@ python -c "from agent.analytics import predict; print(predict.versions(), predic
 ```
 
 Expected: `['0.1', '0.2'] 0.2`. The agent currently serves v0.2 because it is newest and nothing is pinned.
+
+## Part 0: the build review (10 min)
+
+A build review is a walk through what exists, not a presentation. Do it out loud with the instructor, in
+this order, with the terminal and GitHub open:
+
+1. `git log --oneline main | head -12`: read the merges since `v0.0`. Each is a PR; say what each one added.
+2. `pytest -q`: the number and the skips. Say what each skip is.
+3. `python -m eval.harness --rung 1`: the four metrics. Say which threshold each is against and why the
+   routing line is red.
+4. Open `src/agent/models/`: two artifacts, two cards. Read one card's `adr`, `training_data.sha256` and
+   `metrics` fields aloud.
+5. Open `docs/adr/`: ADR-0003 to ADR-0005. Say the decision each records in one sentence.
+6. `git diff main --stat` on your open branch: nothing that should not be there.
+
+The review has three possible outcomes: ready to tag; ready after a named fix; not ready. Write the outcome
+and the named fixes in the A1 PR description. A build that cannot be walked through in ten minutes is not
+reviewable, and that is a finding about the build.
 
 ## Part 1: read the table (10 min)
 

@@ -1,6 +1,7 @@
-# Module 4, session 1: two more classifiers, gradient boosting and the LLM
+# Module 4, session 1: build week, classifier and eval harness
 
-Tuesday, Sep 22. Prerequisite: the Module 3 PR (`feature/rung1-baseline`) is merged, so `main` carries
+Tuesday, Sep 22. Syllabus: "Build week: classifier + eval harness". The two classifiers still missing from the
+bake-off, the tool registration that makes model inference part of the agent, and the harness run that proves it. Prerequisite: the Module 3 PR (`feature/rung1-baseline`) is merged, so `main` carries
 `category-v0.1` and ADR-0003. About 60 minutes of guided work; the pull request is the rest.
 
 ## What you will be able to do afterwards

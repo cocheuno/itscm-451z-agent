@@ -20,6 +20,9 @@ All notable changes to this project are documented here. Format: Keep a Changelo
   `agent.analytics.llm_classify` (raw-HTTP Anthropic classifier with schema-enforced labels and per-call cost),
   `train.py --pipeline lr|gbm`, `CATEGORY_MODEL_VERSION` pin in `predict`, and the harness joining ticket inputs
   (impact, urgency, short_description) into the eval rows so `priority_sla_agreement` can be met.
+- Module 5 scaffolding and lectures: knowledge articles and CMDB items for the PDI (`seed_pdi.py --groups --cis
+  --kb`), the three read-tier tools (`agent.tools.readonly`), an MCP server over the registry (`agent.mcp_server`,
+  `mcp>=2.2`), a stdio client check, lectures 05a and 05b, and instructor implementation notes for Modules 3 to 5.
 ### Changed
 - PDI history records carry their corpus number in `correlation_id`; the instance stamps all four timestamps on
   insert, so `data/eval/incidents_history.csv` is the only source of time for analytics (ADR-0002 findings).
