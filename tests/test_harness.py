@@ -39,3 +39,10 @@ def test_priority_agreement_compares_int_predictions_to_text_truth():
     rows = [{"pred_priority": 3, "gt_priority": "3"}, {"pred_priority": None, "gt_priority": "2"},
             {"pred_priority": "1", "gt_priority": "1"}]
     assert metrics.priority_sla_agreement(rows) == 2 / 3
+
+
+def test_eval_set_path_prefers_the_local_seeded_copy(tmp_path):
+    local, committed = tmp_path / "local.jsonl", tmp_path / "committed.jsonl"
+    assert harness.eval_set_path(local, committed) == committed  # nothing seeded yet
+    local.write_text("")
+    assert harness.eval_set_path(local, committed) == local

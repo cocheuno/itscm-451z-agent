@@ -64,7 +64,7 @@ under `docs/exercises/` are the checklists and rubrics. Each session ends in a P
 ## Run the eval harness
 
 ```bash
-python -m eval.harness --rung 1          # dry run against eval/eval_set.jsonl
+python -m eval.harness --rung 1          # dry run against the 40-ticket holdout (data/eval/eval_set.jsonl)
 ```
 
 ## Repository layout

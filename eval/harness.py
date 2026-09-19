@@ -19,20 +19,30 @@ import yaml
 from eval import metrics
 
 ROOT = Path(__file__).resolve().parents[1]
+# The committed reference holdout set (40 tickets, written from the instructor's PDI) and the per-machine copy
+# scripts/seed_pdi.py writes next to ground_truth.csv. Both hold the same 40 corpus numbers and gt_* answers;
+# only sys_id and number differ, so scoring is identical whichever one is read.
 EVAL_SET = ROOT / "data" / "eval" / "eval_set.jsonl"
+LOCAL_EVAL_SET = ROOT / "data" / "synthetic" / "eval_set.jsonl"
 OPEN_SET = ROOT / "data" / "eval" / "incidents_open.csv"
 THRESH = ROOT / "eval" / "thresholds.yaml"
 # The ticket fields an entry point may read. Ground truth (gt_*) is already in the eval set; these are the inputs.
 INPUT_FIELDS = ("short_description", "description", "impact", "urgency", "contact_type")
 
 
-def load_eval_set(path: Path = EVAL_SET, open_set: Path = OPEN_SET) -> list[dict]:
+def eval_set_path(local: Path = LOCAL_EVAL_SET, committed: Path = EVAL_SET) -> Path:
+    """The per-machine eval set if this laptop has seeded a PDI, else the committed reference copy."""
+    return local if local.exists() else committed
+
+
+def load_eval_set(path: Path | None = None, open_set: Path = OPEN_SET) -> list[dict]:
     """The holdout rows written by scripts/seed_pdi.py, joined on corpus_number to the ticket inputs.
 
     seed_pdi.py records sys_id, number, corpus_number and the gt_* columns; the inputs (impact, urgency,
     short_description, ...) come from data/eval/incidents_open.csv so the eval set never has to be re-seeded
-    when an entry point needs another field.
+    when an entry point needs another field. With no path, eval_set_path() picks the file.
     """
+    path = eval_set_path() if path is None else path
     if not path.exists():
         return []
     rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
@@ -110,9 +120,12 @@ def main(argv: list[str] | None = None) -> int:
     if a.summary:
         print(summary(json.loads(Path(a.summary).read_text())))
         return 0
-    rows = load_eval_set()
+    path = eval_set_path()
+    rows = load_eval_set(path)
     if not rows:
-        print("eval set is empty; seed the PDI first (scripts/seed_pdi.py)")
+        print(f"eval set {path} is empty or missing; seed the PDI first (scripts/seed_pdi.py)")
+    else:
+        print(f"eval set: {path.relative_to(ROOT)} ({len(rows)} tickets)")
         rows = []
     try:
         rows = run_rung(a.rung, rows, a.fixtures)

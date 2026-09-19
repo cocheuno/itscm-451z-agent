@@ -54,12 +54,13 @@ data), so today's PR carries the first ADR you write, and the first model artifa
 git checkout main
 git pull origin main
 pytest -q
-ls data/eval/eval_set.jsonl
+ls data/synthetic/eval_set.jsonl
 ```
 
 Expected: pytest ends with `passed` and some `skipped` (the skips are today's work); the last command prints
 the path (the seeder wrote it in Module 2). If it says no such file, run `python scripts/seed_pdi.py` after
-`python scripts/reset_pdi.py`.
+`python scripts/reset_pdi.py`; if you cannot seed today, the harness falls back to the committed reference
+copy at `data/eval/eval_set.jsonl`, which holds the same 40 tickets.
 
 ## Part 1: Service Level Agreements and customer communication (15 min)
 
