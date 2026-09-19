@@ -3,7 +3,9 @@
 About 75 minutes. This is the first row of the A1 bake-off table (TF-IDF + logistic regression). Gradient
 boosting and the LLM classifier fill the other two rows next week; A1 is due Sep 24.
 
-**Before class:** merge Tuesday's PR, pull main, confirm `pytest -q` is green.
+**Before class:** merge Tuesday's PR, pull main, confirm `pytest -q` is green. This page is the checklist and
+rubric; the step-by-step walkthrough with expected output is the
+[Module 3 lecture](../lectures/03-sla-rung1-eval-prs.md).
 
 ## Part 1: the split is a decision (10 min)
 

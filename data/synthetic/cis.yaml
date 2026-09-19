@@ -1,0 +1,40 @@
+# Configuration items for the PDI CMDB (Module 5, lookup_ci). The five CIs the corpus references.
+# Loaded by scripts/seed_pdi.py --cis; the [SYN] marker goes in short_description so reset_pdi.py can find them.
+items:
+  - name: VPN-GW-01
+    sys_class_name: cmdb_ci_netgear
+    support_group: Network Ops
+    operational_status: 1
+    ip_address: 10.20.0.1
+    description: Remote-access VPN gateway, primary site.
+  - name: PRINT-SRV-02
+    sys_class_name: cmdb_ci_server
+    support_group: Desktop Support
+    operational_status: 1
+    ip_address: 10.20.5.12
+    description: Print server for floors 1 to 4.
+  - name: ERP-APP-01
+    sys_class_name: cmdb_ci_server
+    support_group: Application Support
+    operational_status: 1
+    ip_address: 10.20.8.21
+    description: ERP application server; month-end batch runs here.
+  - name: IDP-01
+    sys_class_name: cmdb_ci_server
+    support_group: Security Ops
+    operational_status: 1
+    ip_address: 10.20.1.5
+    description: Identity provider and MFA service.
+  - name: EDR-SIG-4471
+    sys_class_name: cmdb_ci_appl
+    support_group: Security Ops
+    operational_status: 1
+    ip_address: ""
+    description: Endpoint detection signature package 4471.
+groups:
+  - Network Ops
+  - Desktop Support
+  - Application Support
+  - Database Admin
+  - Service Desk L1
+  - Security Ops

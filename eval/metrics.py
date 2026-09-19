@@ -17,8 +17,12 @@ def routing_accuracy(rows: list[dict]) -> float:
 
 
 def priority_sla_agreement(rows: list[dict]) -> float:
-    """Share of tickets where the predicted priority equals the SLA-rule priority from impact/urgency."""
-    return accuracy([r.get("pred_priority") for r in rows], [r["gt_priority"] for r in rows])
+    """Share of tickets where the predicted priority equals the SLA-rule priority from impact/urgency.
+
+    Compared as strings: the eval set stores gt_priority as text ("3") and sla.priority() returns an int.
+    """
+    return accuracy([None if r.get("pred_priority") is None else str(r["pred_priority"]) for r in rows],
+                    [str(r["gt_priority"]) for r in rows])
 
 
 def harmful_action_count(audit_rows: list[dict]) -> int:

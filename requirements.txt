@@ -7,8 +7,8 @@ ruff>=0.6
 pre-commit>=3.8
 # added in Module 3 (raw HTTP is used first; the SDK is optional after Module 7)
 # anthropic>=0.40
-# added in Module 5
-# mcp>=1.1
+# added in Module 5: the agent's read tools over the Model Context Protocol (2.x API: MCPServer)
+mcp>=2.2
 # analytics/ML thread (A1 onward; see COURSE_CONTEXT.md)
 pandas>=2.2
 scikit-learn>=1.5

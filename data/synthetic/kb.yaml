@@ -1,0 +1,228 @@
+# Knowledge-base articles for the PDI (Module 5, read-only tools). Hand-authored to match taxonomy.yaml.
+# Loaded by scripts/seed_pdi.py --kb into kb_knowledge with the [SYN] marker in the title. Not part of the
+# generated corpus, so the manifest digest does not change when this file does.
+articles:
+  - id: KB-VPN-001
+    category: Network
+    subcategory: VPN
+    title: VPN disconnects or will not connect from home
+    keywords: [vpn, tunnel, disconnect, home, certificate]
+    text: |
+      Symptoms: the VPN client connects and drops within minutes, or reports a certificate error.
+      Checks: confirm the client version is 4.2 or later; confirm the laptop clock is correct; try a wired
+      connection to rule out home Wi-Fi. If the gateway VPN-GW-01 shows a certificate warning for everyone,
+      escalate to Network Ops as a P2: the gateway certificate may have expired.
+    resolution: Update the VPN client, correct the clock, or escalate a gateway certificate expiry to Network Ops.
+  - id: KB-WIFI-001
+    category: Network
+    subcategory: WiFi
+    title: Office Wi-Fi drops or shows no internet
+    keywords: [wifi, wireless, ssid, drops, no internet]
+    text: |
+      Symptoms: connected to the corporate SSID but pages do not load, or the connection drops when moving
+      between floors. Checks: forget the network and rejoin; confirm the device certificate is present; ask
+      whether colleagues on the same floor are affected. Several users on one floor means an access point
+      problem: log the floor and room and route to Network Ops.
+    resolution: Rejoin the SSID; route multi-user reports with floor and room to Network Ops.
+  - id: KB-DNS-001
+    category: Network
+    subcategory: DNS
+    title: Internal sites do not resolve but external sites work
+    keywords: [dns, nslookup, resolve, internal, intranet]
+    text: |
+      Symptoms: intranet names fail while public websites load; nslookup times out. Checks: run
+      ipconfig /flushdns (Windows) or restart mDNSResponder (macOS); confirm the VPN is connected when off
+      site. If flushing does not help and more than one user reports it, route to Network Ops.
+    resolution: Flush the resolver cache; confirm VPN; route multi-user cases to Network Ops.
+  - id: KB-SWITCH-001
+    category: Network
+    subcategory: Switch port
+    title: Wired port dead at a desk
+    keywords: [switch, port, wired, ethernet, link light]
+    text: |
+      Symptoms: no link light on the wall port or the laptop with a known-good cable. Checks: try another
+      port at the same desk; try the cable at a working desk. Record the port label from the wall plate and
+      route to Network Ops to enable or replace the port.
+    resolution: Swap cable and port to isolate; route with the port label to Network Ops.
+  - id: KB-LAPTOP-001
+    category: Hardware
+    subcategory: Laptop
+    title: Laptop slow to boot or freezes
+    keywords: [laptop, slow, boot, freeze, fan]
+    text: |
+      Symptoms: boot takes several minutes, the fan runs constantly, or the machine freezes. Checks: reboot
+      fully (not sleep); check free disk space is above 10 percent; check for a pending OS update. If the
+      symptoms persist after a full reboot and updates, route to Desktop Support for a hardware check.
+    resolution: Full reboot, free disk space, apply updates; then Desktop Support.
+  - id: KB-MONITOR-001
+    category: Hardware
+    subcategory: Monitor
+    title: External monitor not detected
+    keywords: [monitor, display, external, docking, no signal]
+    text: |
+      Symptoms: the external monitor shows no signal or is not listed in display settings. Checks: reseat
+      the cable at both ends; try a different port on the dock; press the monitor input button. If the dock
+      is the common factor, see the docking station article.
+    resolution: Reseat cables and try another dock port; swap the dock if it is the common factor.
+  - id: KB-PRINT-001
+    category: Hardware
+    subcategory: Printer
+    title: Print jobs stuck in the queue or spooler errors
+    keywords: [printer, spooler, queue, stuck, jobs]
+    text: |
+      Symptoms: jobs sit in the queue, or the print dialog reports a spooler error. Checks: cancel the stuck
+      job; restart the Print Spooler service on the workstation; print a test page. If the queue on the print
+      server PRINT-SRV-02 is the one stuck, and several users report it, route to Desktop Support: the server
+      spooler service may need a restart.
+    resolution: Restart the local spooler; multi-user queues on PRINT-SRV-02 go to Desktop Support.
+  - id: KB-DOCK-001
+    category: Hardware
+    subcategory: Docking station
+    title: Docking station loses network or displays
+    keywords: [dock, docking, station, usb-c, power]
+    text: |
+      Symptoms: displays or wired network vanish when docked, or the laptop does not charge on the dock.
+      Checks: unplug the dock from power for 30 seconds; update the dock firmware from the vendor tool; try a
+      different USB-C port on the laptop. Route to Desktop Support if the dock fails on a second laptop.
+    resolution: Power-cycle the dock and update firmware; replace via Desktop Support if it fails elsewhere.
+  - id: KB-OFFICE-001
+    category: Software
+    subcategory: Office suite
+    title: Office application crashes on open
+    keywords: [office, word, excel, outlook, crash]
+    text: |
+      Symptoms: an Office application closes immediately or reports "stopped working". Checks: open the
+      application in safe mode (hold Ctrl while launching); disable recently added add-ins; run the Office
+      repair from installed programs. Route to Application Support if repair does not help.
+    resolution: Safe mode, disable add-ins, run repair; then Application Support.
+  - id: KB-BROWSER-001
+    category: Software
+    subcategory: Browser
+    title: Browser will not load internal web apps
+    keywords: [browser, chrome, edge, blank page, cache]
+    text: |
+      Symptoms: internal web applications show a blank page or a certificate warning. Checks: clear the
+      cache for the site; try a private window; confirm the date and time. If only one application is
+      affected for everyone, it is an application incident: route to Application Support.
+    resolution: Clear cache, private window; single-app outages go to Application Support.
+  - id: KB-ERP-001
+    category: Software
+    subcategory: ERP client
+    title: ERP client crashes or reports time out
+    keywords: [erp, client, timeout, report, month end]
+    text: |
+      Symptoms: the ERP client crashes when opening orders, or reports time out on large reports. Checks:
+      confirm the client is the supported version; retry the report with a narrower date range. During the
+      first three working days of the month the application server ERP-APP-01 is under month-end load; if
+      several users report time outs then, route to Application Support as a P2.
+    resolution: Reinstall to the supported client; month-end time outs on ERP-APP-01 go to Application Support.
+  - id: KB-LICENSE-001
+    category: Software
+    subcategory: License
+    title: Application reports the license is invalid or expired
+    keywords: [license, activation, expired, key]
+    text: |
+      Symptoms: an application refuses to start or runs in a reduced mode citing licensing. Checks: sign out
+      and back in to the application; confirm the user is in the licensed group. Route to Application
+      Support with the application name and the exact message; do not enter license keys by hand.
+    resolution: Re-sign in; route with the exact message to Application Support.
+  - id: KB-DBPERF-001
+    category: Database
+    subcategory: Performance
+    title: Reports or queries running slowly
+    keywords: [database, slow, query, report, performance]
+    text: |
+      Symptoms: a report that used to take seconds now takes minutes. Checks: record the report name, the
+      time of day, and whether it is slow for everyone. Route to Database Admin with those three facts; they
+      will check locks and the execution plan.
+    resolution: Collect report name, time, scope; route to Database Admin.
+  - id: KB-DBACCESS-001
+    category: Database
+    subcategory: Access
+    title: Database access denied or login failed
+    keywords: [database, access denied, login failed, permission]
+    text: |
+      Symptoms: an application or analyst tool reports login failed or permission denied for a database.
+      Checks: confirm the account is not locked; confirm the request is for an existing role. Access is
+      granted through a service request, not an incident; route to Database Admin and link the request.
+    resolution: Check lockout; route to Database Admin and raise a service request for new access.
+  - id: KB-DBBACKUP-001
+    category: Database
+    subcategory: Backup failure
+    title: Backup job failed overnight
+    keywords: [backup, job failed, overnight, restore]
+    text: |
+      Symptoms: the backup monitor reports a failed job. Route to Database Admin immediately as a P2 with
+      the job name and the error text; a failed backup with no rerun is a data-loss exposure.
+    resolution: Route to Database Admin as P2 with job name and error.
+  - id: KB-HOWTO-001
+    category: Inquiry / Help
+    subcategory: How-to
+    title: How to set an out-of-office reply
+    keywords: [out of office, automatic reply, mail, how to]
+    text: |
+      In the mail client open Settings, Automatic replies, and set the dates and the message. Replies to
+      external senders are off by default; turn them on only if the message contains no internal details.
+    resolution: Settings, Automatic replies; consider external replies.
+  - id: KB-PASSWORD-001
+    category: Inquiry / Help
+    subcategory: Password reset
+    title: Reset a forgotten password
+    keywords: [password, reset, forgot, self service]
+    text: |
+      Use the self-service portal from any browser: choose Forgot password, verify with the registered
+      phone, and set a new password. The desk resets a password only after verifying identity with two
+      facts from the HR record; never reset on the strength of a phone call alone.
+    resolution: Self-service portal first; desk reset only after identity verification.
+  - id: KB-UNLOCK-001
+    category: Inquiry / Help
+    subcategory: Account unlock
+    title: Account locked or MFA push loop
+    keywords: [locked, account, mfa, push, approve, lockout]
+    text: |
+      Symptoms: the account reports locked, or MFA pushes repeat and the account locks again. Checks: ask the
+      user to deny unexpected pushes and stop retrying for ten minutes; unlock once after identity
+      verification. If the lock returns within the hour, or many users report it at once, the identity
+      provider IDP-01 may be looping: route to Service Desk L1 lead and Security Ops.
+    resolution: Deny unexpected pushes, wait, unlock once; repeated locks or many users go to Security Ops.
+  - id: KB-PHISH-001
+    category: Security
+    subcategory: Phishing report
+    title: Reporting a suspicious email
+    keywords: [phishing, suspicious email, report, link]
+    text: |
+      Do not click links or open attachments. Use the Report Phishing button in the mail client, which
+      forwards the message with headers to Security Ops. If the user already clicked, route to Security Ops
+      as a P2 and ask the user to change the password from a different device.
+    resolution: Report button; clicked links go to Security Ops as P2 with a password change.
+  - id: KB-MALWARE-001
+    category: Security
+    subcategory: Malware alert
+    title: Endpoint protection alert or quarantined file
+    keywords: [malware, alert, quarantine, edr, antivirus]
+    text: |
+      Symptoms: the endpoint agent shows an alert or quarantines a file. Do not restore the file. Record the
+      detection name and the file path. If the same detection appears on many machines within a day and the
+      file is a known internal tool, it may be a false positive from signature EDR-SIG-4471: route to
+      Security Ops with the detection name; they decide on an exclusion.
+    resolution: Never restore; route detection name and path to Security Ops.
+  - id: KB-LOGIN-001
+    category: Security
+    subcategory: Suspicious login
+    title: Sign-in from an unfamiliar location
+    keywords: [suspicious login, unfamiliar location, sign-in alert]
+    text: |
+      Symptoms: the user or the identity system reports a sign-in from an unexpected country or device.
+      Ask whether the user is travelling or using a VPN. If not, route to Security Ops as a P2 and reset the
+      password after identity verification; do not disable the account from the desk.
+    resolution: Confirm travel; otherwise Security Ops P2 and a verified password reset.
+  - id: KB-REQUEST-001
+    category: Inquiry / Help
+    subcategory: How-to
+    title: Incident or service request? How to choose
+    keywords: [service request, catalog, incident, request, new access]
+    text: |
+      An incident restores something that is broken. A service request provides something new: access,
+      software, a laptop. If nothing is broken, raise a service request from the catalog; the desk will
+      convert a wrongly raised incident. Requests may need approval and are fulfilled by the owning group.
+    resolution: Broken means incident; new means service request from the catalog.
