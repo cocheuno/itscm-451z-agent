@@ -1,21 +1,27 @@
-# ADR-NNNN: <short title>
-- **Status:** Proposed | Accepted | Superseded by ADR-NNNN
-- **Date:** YYYY-MM-DD
-- **Rung/Module:**
+# ADR-0003: Time-based train/test split for the category classifier
+- **Status:** Accepted
+- **Date:** 2026-09-17
+- **Rung/Module:** Rung1/Module 3
 - **Related Issue/PR:** #
 
 ## Context
-What forces are at play (ITSM requirement, SLA, security, cost, PDI limitation)?
+The classifier is trained on data/eval/incidents_history.csv (4,242 closed incidents, March
+and will score tickets that arrive after it was trained. The corpus contains paraphrase fam
+incident, and August differs from earlier months (volume trend, slow Hardware resolution).
 
 ## Decision
-What we will do, stated in the active voice.
+Train on tickets opened before 2026-08-01 (3,461 rows) and test on August (781 rows). T
+TF-IDF (1-2 grams, min_df 2, sublinear TF) into logistic regression with balanced class we
+category-v0.1 with a model card naming this ADR.
 
 ## Alternatives considered
-- A — why not
-- B — why not
+- Random 80/20 split: puts paraphrases of the same incident on both sides; the score wo
+performance on unseen incidents.
+- K-fold cross-validation: same leak, and no single "later" test month to report.
 
 ## Consequences
-Positive, negative, and what we now have to monitor.
+The August test month is smaller than a random 20 percent would be (781 rows). Every
+bake-off uses the same split so the rows are comparable. When September data exists,
 
 ## Action-tier impact
-Does this change any tool's tier or approval path? If yes, `docs/governance/governance.md` must be updated in the same PR.
+None. Model inference is read tier.
