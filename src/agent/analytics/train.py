@@ -40,7 +40,10 @@ def build_pipeline(kind: str = "lr"):
     """
     if kind not in PIPELINES:
         raise ValueError(f"unknown pipeline {kind!r}; choose from {PIPELINES}")
-    raise NotImplementedError("build_pipeline: see TODO(student) in src/agent/analytics/train.py")
+    tfidf = TfidfVectorizer(ngram_range=(1, 2), min_df=2, sublinear_tf=True)
+    if kind == "lr":
+        return make_pipeline(tfidf, LogisticRegression(max_iter=1000, class_weight="balanc
+    raise NotImplementedError("gbm: Module 4")
 
 
 def fit_and_evaluate(pipeline, train: pd.DataFrame, test: pd.DataFrame) -> dict:
