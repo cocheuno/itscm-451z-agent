@@ -5,17 +5,16 @@
 - **Related Issue/PR:** #
 
 ## Context
-What forces are at play (ITSM requirement, SLA, security, cost, PDI limitation)?
+The bake-off needs a non-linear candidate on the same split.
 
 ## Decision
-What we will do, stated in the active voice.
+TF-IDF, SVD to 50 components, histogram gradient boosting, saved as category-v0.2
 
 ## Alternatives considered
-- A — why not
-- B — why not
+Gradient boosting directly on the sparse TF-IDF (slow, and a much larger artifact); a random forest (similar, less accurate on text).
 
 ## Consequences
-Positive, negative, and what we now have to monitor.
+The artifact is about 2.7 MB compressed, under the "few MB" limit; random_state=451 makes retraining reproducible.
 
 ## Action-tier impact
-Does this change any tool's tier or approval path? If yes, `docs/governance/governance.md` must be updated in the same PR.
+None
