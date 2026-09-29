@@ -68,8 +68,8 @@ def run_rung(rung: str, rows: list[dict], fixtures: bool) -> list[dict]:
         return [{**r, **classify_with_rules(r)} for r in rows]
     if rung == "1":
         from agent.analytics.predict import classify  # noqa: E402
-        from agent.workflow.sla import priority # noqa: E402
-        return [{**r, **classify(r), "pred_priority": priority(int(r["impact"]), int(r["urgency"]))}
+        from agent.workflow.sla import priority  # noqa: E402
+        return [{**r, **classify(r), "pred_priority": priority(int(r["impact"]), int(r["urgency"]))} for r in rows]
     raise NotImplementedError(f"rung {rung} entry point not wired into the harness yet")
 
 
