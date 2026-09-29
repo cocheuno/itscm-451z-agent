@@ -46,3 +46,15 @@ def test_eval_set_path_prefers_the_local_seeded_copy(tmp_path):
     assert harness.eval_set_path(local, committed) == committed  # nothing seeded yet
     local.write_text("")
     assert harness.eval_set_path(local, committed) == local
+
+
+def test_main_scores_every_ticket_it_loads(tmp_path, monkeypatch):
+    """Regression: the loaded rows must reach the metrics (n == tickets), not be discarded after the count."""
+    ev = tmp_path / "eval_set.jsonl"
+    ev.write_text("\n".join(json.dumps({"corpus_number": n, "gt_category": "Network", "gt_priority": "3",
+                                        "gt_assignment_group": "Network Ops"})
+                            for n in ("SYN0004243", "SYN0004244")) + "\n")
+    monkeypatch.setattr(harness, "eval_set_path", lambda: ev)
+    report = tmp_path / "r.json"
+    harness.main(["--rung", "0", "--report", str(report)])
+    assert json.loads(report.read_text())["metrics"]["n"] == 2

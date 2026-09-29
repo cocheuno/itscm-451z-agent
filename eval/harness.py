@@ -126,8 +126,8 @@ def main(argv: list[str] | None = None) -> int:
     if not rows:
         print(f"eval set {path} is empty or missing; seed the PDI first (scripts/seed_pdi.py)")
     else:
-        print(f"eval set: {path.relative_to(ROOT)} ({len(rows)} tickets)")
-        rows = []
+        shown = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path
+        print(f"eval set: {shown} ({len(rows)} tickets)")
     try:
         rows = run_rung(a.rung, rows, a.fixtures)
     except NotImplementedError as e:
