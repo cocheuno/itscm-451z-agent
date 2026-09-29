@@ -106,7 +106,7 @@ def main(argv: list[str] | None = None) -> int:
     print(table(results))
     if a.report:
         Path(a.report).parent.mkdir(parents=True, exist_ok=True)
-        Path(a.report).write_text(json.dumps(results, indent=2))
+        Path(a.report).write_text(json.dumps(results, indent=2), encoding="utf-8")
     return 0
 
 

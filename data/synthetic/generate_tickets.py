@@ -64,8 +64,8 @@ CHANGE_FIELDS = ["number", "short_description", "type", "cmdb_ci", "start", "end
 # helpers
 # ---------------------------------------------------------------------------------------------
 def load_config(taxonomy: Path | None = None, patterns: Path | None = None) -> tuple[dict, dict]:
-    tax = yaml.safe_load((taxonomy or HERE / "taxonomy.yaml").read_text())
-    pat = yaml.safe_load((patterns or HERE / "patterns.yaml").read_text())
+    tax = yaml.safe_load((taxonomy or HERE / "taxonomy.yaml").read_text(encoding="utf-8"))
+    pat = yaml.safe_load((patterns or HERE / "patterns.yaml").read_text(encoding="utf-8"))
     return tax, pat
 
 
@@ -572,7 +572,7 @@ def _median(v: list[int]) -> float:
 # analysis helpers (used by tests, the plot script and --dry-run stats; pure functions over rows)
 # ---------------------------------------------------------------------------------------------
 def read_csv(path: Path) -> list[dict]:
-    with path.open(newline="") as f:
+    with path.open(newline="", encoding="utf-8") as f:
         return list(csv.DictReader(f))
 
 
@@ -678,7 +678,7 @@ def open_row(t: Ticket, fmt: str) -> dict:
 
 def write_csv(path: Path, fields: list[str], rows: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", newline="") as f:
+    with path.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=fields, lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
@@ -714,7 +714,7 @@ def write_manifest(corpus: Corpus, path: Path, corpus_hashes: dict[str, str], ou
     out = out_dir.resolve()
     corpus_dir = str(out.relative_to(ROOT.resolve())) if ROOT.resolve() in out.parents else str(out)
     manifest = {**corpus.manifest, "corpus_dir": corpus_dir, "corpus_sha256": corpus_hashes}
-    path.write_text(json.dumps(manifest, indent=2, default=str) + "\n")
+    path.write_text(json.dumps(manifest, indent=2, default=str) + "\n", encoding="utf-8")
 
 
 def manifest_digest(manifest: dict) -> str:

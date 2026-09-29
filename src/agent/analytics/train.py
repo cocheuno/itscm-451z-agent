@@ -98,7 +98,7 @@ def save(pipeline, card: dict, models_dir: Path = MODELS_DIR) -> tuple[Path, Pat
     stem = f"{card['task']}-v{card['version']}"
     artifact, card_path = models_dir / f"{stem}.joblib", models_dir / f"{stem}.json"
     joblib.dump(pipeline, artifact, compress=3)  # trees and SVD components compress well; ~40% smaller
-    card_path.write_text(json.dumps(card, indent=2) + "\n")
+    card_path.write_text(json.dumps(card, indent=2) + "\n", encoding="utf-8")
     return artifact, card_path
 
 

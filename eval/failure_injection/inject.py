@@ -13,7 +13,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("scenario")
     a = ap.parse_args()
-    scenarios = {s["id"]: s for s in yaml.safe_load((HERE / "scenarios.yaml").read_text())["scenarios"]}
+    scenarios = {s["id"]: s for s in yaml.safe_load((HERE / "scenarios.yaml").read_text(encoding="utf-8"))["scenarios"]}
     s = scenarios[a.scenario]
     print(f"would apply {s['mechanism']} and expect: {s['expected']}")
     raise NotImplementedError("wire the mechanism, run the agent, compare observed vs expected")

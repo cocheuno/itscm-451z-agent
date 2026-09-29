@@ -39,10 +39,10 @@ class AuditLog:
         self.path = path or LOG_DIR / "audit.jsonl"
 
     def write(self, entry: AuditEntry) -> None:
-        with self.path.open("a") as f:
+        with self.path.open("a", encoding="utf-8") as f:
             f.write(json.dumps(asdict(entry)) + "\n")
 
     def read(self) -> list[dict]:
         if not self.path.exists():
             return []
-        return [json.loads(line) for line in self.path.read_text().splitlines() if line.strip()]
+        return [json.loads(line) for line in self.path.read_text(encoding="utf-8").splitlines() if line.strip()]

@@ -31,7 +31,7 @@ class Registry:
     def __init__(self) -> None:
         self.tools: dict[str, ToolSpec] = {}
         for p in sorted(SCHEMA_DIR.glob("*.json")):
-            self.tools[p.stem] = ToolSpec(json.loads(p.read_text()))
+            self.tools[p.stem] = ToolSpec(json.loads(p.read_text(encoding="utf-8")))
 
     def bind(self, name: str, fn: Callable[..., Any]) -> None:
         self.tools[name].fn = fn
