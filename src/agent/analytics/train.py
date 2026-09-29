@@ -17,6 +17,9 @@ from pathlib import Path
 
 import joblib
 import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
 
 from agent.analytics import features
 
@@ -42,7 +45,7 @@ def build_pipeline(kind: str = "lr"):
         raise ValueError(f"unknown pipeline {kind!r}; choose from {PIPELINES}")
     tfidf = TfidfVectorizer(ngram_range=(1, 2), min_df=2, sublinear_tf=True)
     if kind == "lr":
-        return make_pipeline(tfidf, LogisticRegression(max_iter=1000, class_weight="balanc
+        return make_pipeline(tfidf, LogisticRegression(max_iter=1000, class_weight="balanced"))
     raise NotImplementedError("gbm: Module 4")
 
 
