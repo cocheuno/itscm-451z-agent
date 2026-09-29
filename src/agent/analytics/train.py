@@ -17,6 +17,8 @@ from pathlib import Path
 
 import joblib
 import pandas as pd
+from sklearn.decomposition import TruncatedSVD
+from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
@@ -46,8 +48,8 @@ def build_pipeline(kind: str = "lr"):
     tfidf = TfidfVectorizer(ngram_range=(1, 2), min_df=2, sublinear_tf=True)
     if kind == "lr":
         return make_pipeline(tfidf, LogisticRegression(max_iter=1000, class_weight="balanced"))
-    raise NotImplementedError("gbm: Module 4")
-
+    return make_pipeline(tfidf, TruncatedSVD(n_components=50, random_state=451),
+                         HistGradientBoostingClassifier(random_state=451))
 
 def fit_and_evaluate(pipeline, train: pd.DataFrame, test: pd.DataFrame) -> dict:
     """Fit on train, score on test; returns per-class precision/recall/F1, accuracy and a labelled confusion matrix."""
