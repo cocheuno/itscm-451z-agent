@@ -1,7 +1,7 @@
 # ADR-NNNN: <short title>
-- **Status:** Proposed | Accepted | Superseded by ADR-NNNN
-- **Date:** YYYY-MM-DD
-- **Rung/Module:**
+- **Status:** Accepted
+- **Date:** 2026-09-29
+- **Rung/Module:**  Rung 3/Module 4
 - **Related Issue/PR:** #
 
 ## Context
