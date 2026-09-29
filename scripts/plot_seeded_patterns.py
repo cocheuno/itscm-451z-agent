@@ -127,7 +127,7 @@ def main() -> int:
     ap.add_argument("--manifest", type=Path, default=None, help="instructor-only manifest to overlay seeded windows")
     a = ap.parse_args()
     inc, chg = load(a.corpus_dir)
-    manifest = json.loads(a.manifest.expanduser().read_text()) if a.manifest else None
+    manifest = json.loads(a.manifest.expanduser().read_text(encoding="utf-8")) if a.manifest else None
 
     fig, axes = plt.subplots(2, 2, figsize=(15, 10), facecolor="#fcfcfb")
     fig.suptitle(f"Seeded patterns: {len(inc)} closed incidents, {inc['opened_at'].min():%Y-%m-%d} to "

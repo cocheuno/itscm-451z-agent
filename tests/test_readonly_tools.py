@@ -81,7 +81,7 @@ def test_bind_all_dispatches_through_the_registry_at_read_tier():
 
 
 def test_mcp_server_exposes_only_read_tools_and_calls_through_the_registry():
-    pytest.importorskip("mcp")
+    pytest.importorskip("mcp.server.mcpserver", reason="needs mcp>=2.2: pip install -r requirements.txt")
     from agent.mcp_server import build_server
 
     r = Registry()

@@ -45,11 +45,11 @@ def load_eval_set(path: Path | None = None, open_set: Path = OPEN_SET) -> list[d
     path = eval_set_path() if path is None else path
     if not path.exists():
         return []
-    rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
     if open_set.exists():
         import csv
 
-        with open_set.open(newline="") as f:
+        with open_set.open(newline="", encoding="utf-8") as f:
             inputs = {r["number"]: {k: r[k] for k in INPUT_FIELDS if k in r} for r in csv.DictReader(f)}
         rows = [{**inputs.get(r.get("corpus_number"), {}), **r} for r in rows]
     return rows
@@ -119,7 +119,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--summary", default=None, help="print a Markdown summary of an existing report")
     a = ap.parse_args(argv)
     if a.summary:
-        print(summary(json.loads(Path(a.summary).read_text())))
+        print(summary(json.loads(Path(a.summary).read_text(encoding="utf-8"))))
         return 0
     path = eval_set_path()
     rows = load_eval_set(path)
@@ -133,12 +133,12 @@ def main(argv: list[str] | None = None) -> int:
     except NotImplementedError as e:
         print(f"harness: {e}")
     m = compute(rows)
-    thresholds = yaml.safe_load(THRESH.read_text()) if THRESH.exists() else {}
+    thresholds = yaml.safe_load(THRESH.read_text(encoding="utf-8")) if THRESH.exists() else {}
     failures = check(m, thresholds) if rows else []
     report = {"rung": a.rung, "metrics": m, "failures": failures}
     if a.report:
         Path(a.report).parent.mkdir(parents=True, exist_ok=True)
-        Path(a.report).write_text(json.dumps(report, indent=2))
+        Path(a.report).write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(summary(report))
     return 1 if failures else 0
 

@@ -95,12 +95,12 @@ def test_corpus_size_and_span(history, manifest):
 
 
 def test_corpus_carries_no_truth_columns_or_markers(gen):
-    with (EVAL_DIR / "incidents_history.csv").open(newline="") as f:
+    with (EVAL_DIR / "incidents_history.csv").open(newline="", encoding="utf-8") as f:
         header = next(csv.reader(f))
     assert set(header) == set(gen.HISTORY_FIELDS)
     banned = {"tag", "cluster", "poison", "spike", "gt_", "manifest", "root_cause"}
     assert not [h for h in header if any(b in h.lower() for b in banned)]
-    text = (EVAL_DIR / "incidents_history.csv").read_text()
+    text = (EVAL_DIR / "incidents_history.csv").read_text(encoding="utf-8")
     assert gen.MARK not in text, "the [SYN] marker is added at PDI load time, not in the corpus"
 
 
@@ -163,7 +163,7 @@ def test_change_spike_exceeds_baseline(history, manifest):
     assert len(in_window) > 2 * baseline, f"spike {len(in_window)} vs baseline {baseline:.1f}"
     assert len(in_window) >= sp["count"]
     # decoy changes must not show a comparable burst
-    with (EVAL_DIR / "changes.csv").open(newline="") as f:
+    with (EVAL_DIR / "changes.csv").open(newline="", encoding="utf-8") as f:
         changes = {c["number"]: c for c in csv.DictReader(f)}
     for num in sp["decoy_change_numbers"]:
         end = datetime.strptime(changes[num]["end"], FMT)

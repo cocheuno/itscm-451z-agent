@@ -53,7 +53,7 @@ def load(version: str | None = None, models_dir: Path = MODELS_DIR):
     if version is None:
         raise FileNotFoundError(f"no {TASK} model under {models_dir}; run python -m agent.analytics.train")
     stem = f"{TASK}-v{version}"
-    return joblib.load(models_dir / f"{stem}.joblib"), json.loads((models_dir / f"{stem}.json").read_text())
+    return joblib.load(models_dir / f"{stem}.joblib"), json.loads((models_dir / f"{stem}.json").read_text(encoding="utf-8"))
 
 
 def classify(ticket: dict, version: str | None = None, models_dir: Path = MODELS_DIR) -> dict:

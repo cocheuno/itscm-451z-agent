@@ -78,7 +78,7 @@ def load_generator():
 
 
 def read_csv(path: Path) -> list[dict]:
-    with path.open(newline="") as f:
+    with path.open(newline="", encoding="utf-8") as f:
         return list(csv.DictReader(f))
 
 
@@ -192,7 +192,7 @@ def load_history(sn, rows: list[dict], mark: str, resolve: Callable[[str], str],
     report: dict[str, bool] = {}
     patch = False
     started = time.monotonic()
-    with map_path.open("a" if append else "w", newline="") as f:
+    with map_path.open("a" if append else "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["corpus_number", "sys_id", "number"])
         if not append or f.tell() == 0:
             w.writeheader()
@@ -246,10 +246,10 @@ def main() -> int:
     open_rows = read_csv(EVAL_DIR / "incidents_open.csv") if load_open else []
     history_rows = read_csv(EVAL_DIR / "incidents_history.csv")[: a.limit] if a.history else []
     change_rows = read_csv(EVAL_DIR / "changes.csv") if a.changes else []
-    cis_cfg = yaml.safe_load(CIS_YAML.read_text()) if (a.cis or a.groups) else {"items": [], "groups": []}
+    cis_cfg = yaml.safe_load(CIS_YAML.read_text(encoding="utf-8")) if (a.cis or a.groups) else {"items": [], "groups": []}
     ci_items = cis_cfg["items"] if a.cis else []
     group_names = cis_cfg["groups"] if a.groups else []
-    kb_articles = yaml.safe_load(KB_YAML.read_text())["articles"] if a.kb else []
+    kb_articles = yaml.safe_load(KB_YAML.read_text(encoding="utf-8"))["articles"] if a.kb else []
 
     if a.dry_run:
         print(json.dumps({"open": [open_payload(r, mark) for r in open_rows[:2]],
@@ -274,7 +274,7 @@ def main() -> int:
 
     # -- open set: ground truth + holdout eval set (unchanged contract for the rung-0/1 harness) --------------
     if open_rows:
-        with GT_PATH.open("w", newline="") as gt, EVAL_SET.open("w") as ev:
+        with GT_PATH.open("w", newline="", encoding="utf-8") as gt, EVAL_SET.open("w", encoding="utf-8") as ev:
             w = csv.DictWriter(gt, fieldnames=GT_FIELDS)
             w.writeheader()
             for row in open_rows:
