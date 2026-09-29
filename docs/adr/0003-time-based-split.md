@@ -2,7 +2,7 @@
 - **Status:** Accepted
 - **Date:** 2026-09-17
 - **Rung/Module:** Rung 1 / Module 3
-- **Related Issue/PR:** #<your PR number, fill in after opening it>
+- **Related Issue/PR:** #19
 
 ## Context
 The classifier is trained on data/eval/incidents_history.csv (4,242 closed incidents, March to August 2026)
