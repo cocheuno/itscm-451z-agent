@@ -26,3 +26,27 @@ def test_parse_response_unknown_model_has_no_cost():
     fake = {"model": "claude-something-9", "usage": {"input_tokens": 10, "output_tokens": 5},
             "content": [{"type": "text", "text": '{"category": "Hardware", "confidence": 0.5}'}]}
     assert m.parse_response(fake, 1)["cost_usd"] is None
+
+
+def test_schema_uses_only_keywords_structured_outputs_accept():
+    """The Messages API rejects minimum/maximum/minLength/... in output_config.format.schema (HTTP 400)."""
+    banned = {"minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf", "minLength",
+              "maxLength", "pattern", "minItems", "maxItems"}
+
+    def walk(node):
+        if isinstance(node, dict):
+            assert not (banned & node.keys()), f"unsupported keyword in schema: {banned & node.keys()}"
+            for v in node.values():
+                walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+
+    walk(m.SCHEMA)
+    assert m.SCHEMA["additionalProperties"] is False
+
+
+def test_confidence_is_clamped_client_side():
+    msg = {"model": "claude-sonnet-4-6", "usage": {"input_tokens": 10, "output_tokens": 5},
+           "content": [{"type": "text", "text": '{"category": "Network", "confidence": 1.7}'}]}
+    assert m.parse_response(msg, 10)["confidence"] == 1.0
