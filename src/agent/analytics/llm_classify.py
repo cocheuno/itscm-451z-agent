@@ -27,7 +27,10 @@ SCHEMA = {
     "type": "object",
     "properties": {
         "category": {"type": "string", "enum": CATEGORIES},
-        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        # Structured outputs accept only basic types, enum/const, anyOf/allOf and additionalProperties: false.
+        # Numeric bounds (minimum/maximum) are rejected with a 400, so the range lives in the description
+        # and parse_response clamps the value client-side.
+        "confidence": {"type": "number", "description": "How sure you are, from 0 (guess) to 1 (certain)."},
     },
     "required": ["category", "confidence"],
     "additionalProperties": False,
@@ -64,7 +67,8 @@ def parse_response(msg: dict, latency_ms: int) -> dict:
     if price:
         cost = round(usage["input_tokens"] * price[0] / 1e6 + usage["output_tokens"] * price[1] / 1e6, 6)
     return {
-        "pred_category": out["category"], "confidence": out["confidence"], "model": model,
+        "pred_category": out["category"], "confidence": min(1.0, max(0.0, float(out["confidence"]))),
+        "model": model,
         "input_tokens": usage["input_tokens"], "output_tokens": usage["output_tokens"],
         "cost_usd": cost, "latency_ms": latency_ms,
     }
