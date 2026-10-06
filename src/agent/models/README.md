@@ -11,3 +11,6 @@ Rules (COURSE_CONTEXT.md, "Models are change-managed artifacts"):
 - Artifacts under a few MB are committed with their card. Anything larger needs a Git LFS decision in an ADR
   before it is committed; `train.py` warns at 3 MB.
 - Never retrain in place. A new run is a new version, even for the same code, because the data hash may differ.
+- The scikit-learn version in `requirements.txt` is pinned to the one in the newest card's `environment`
+  block. A `.joblib` file is a pickle and does not survive a library upgrade reliably. Upgrading the pin
+  means retraining every committed model in the same PR; `tests/test_analytics.py` fails when they differ.
