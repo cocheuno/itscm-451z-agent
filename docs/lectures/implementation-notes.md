@@ -48,9 +48,17 @@ the 40 holdout: 1.0; fit 1.8 s; artifact 0.28 MB.
 per-call cost from a price table, latency); `bakeoff.py` rows `rules`, `model:<v>`, `llm` (the LLM row only
 appears when `ANTHROPIC_API_KEY` in `.env` is real); `CATEGORY_MODEL_VERSION` pin.
 
-**Student writes.** ADR-0004 and `build_pipeline("gbm")`, model `category-v0.2`; a key in `.env`; the
-`classify_incident` tool schema, governance row, ADR-0005; the audit entry in the poller; the bake-off run;
-the memo in `docs/memos/`; ADR-0006 and the pin; the A1 PR; tag `v0.1`; the release with reports attached.
+**Already on `main` (landed outside a PR, Sep 29 to Oct 6).** ADR-0004 with the template header still in
+place (title `ADR-NNNN`, rung given as 3); the `gbm` branch of `build_pipeline`; the LR imports. Lecture 04a
+opens with a state table and makes completing the ADR header a step instead of writing the ADR.
+
+**Student writes.** Model `category-v0.2`; a key in `.env`; the `classify_incident` tool schema, governance
+row, ADR-0005; the audit entry in the poller; the bake-off run; the memo in `docs/memos/`; ADR-0006 and the
+pin; the A1 PR; tag `v0.1`; the release with reports attached.
+
+**Template incident.** A web-editor commit renamed `docs/adr/0000-template.md` into ADR-0004 and a later one
+created a one-line `adr-template.md`. The template is restored and the stray file removed in the lecture PR;
+every `cp docs/adr/0000-template.md ...` in the lectures works again.
 
 **Verify.**
 
@@ -68,7 +76,9 @@ also knows `claude-sonnet-5`, `claude-haiku-4-5` and `claude-opus-5`; any other 
 and the student must add a row. Structured output (`output_config.format`) is what makes the label set
 enforced; if a model rejects it the API returns 400 with that field named.
 
-**Measured.** TF-IDF+SVD50+HGB on August 0.994 / macro F1 0.990, fit 2.1 s; on the 40 holdout 1.0.
+**Measured.** TF-IDF+SVD50+HGB on August 0.994 / macro F1 0.990, fit 2.1 s; on the 40 holdout 1.0. Bake-off
+on the instructor's machine (Oct 6, claude-sonnet-4-6): rules 0.15 / 33 unclassified; model:0.1 1.0 at 5 ms;
+llm 0.625 accuracy, 0.665 macro F1, 1.3 s, $0.0012 per prediction, weakest class Software at 0.46.
 
 **Corpus caveat.** The synthetic text is separable by a bag of words, so every local model scores 1.0 and
 the bake-off differentiates on latency and cost only. The lectures say so and make the student explain

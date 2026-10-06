@@ -1,10 +1,10 @@
 """A1 bake-off: run every available classifier over the holdout eval set and print one comparison table.
 
     python scripts/bakeoff.py                      # rules + every trained model version (+ LLM if implemented)
-    python scripts/bakeoff.py --rows rules,lr:0.1,gbm:0.2,llm
+    python scripts/bakeoff.py --rows rules,model:0.1,model:0.2,llm
     python scripts/bakeoff.py --report eval/reports/bakeoff.json
 
-Rows: "rules" is the Rung 0 keyword poller; "<label>:<version>" is a model under src/agent/models/ loaded
+Rows: "rules" is the Rung 0 keyword poller; "model:<version>" is a model under src/agent/models/ loaded
 through agent.analytics.predict; "llm" is agent.analytics.llm_classify.classify (Module 4, student-written).
 Every row reports accuracy, macro F1, per-class F1, latency per prediction, and cost per prediction (zero for
 local models; the LLM row sums what the API reported). The eval set is the same one the harness scores, so the
