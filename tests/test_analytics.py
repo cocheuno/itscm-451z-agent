@@ -107,3 +107,21 @@ def test_selected_version_prefers_the_pin_and_falls_back_to_newest(tmp_path, mon
     monkeypatch.setenv("CATEGORY_MODEL_VERSION", "9.9")
     with pytest.raises(FileNotFoundError, match="CATEGORY_MODEL_VERSION=9.9"):
         predict.selected_version(tmp_path)
+
+
+def test_installed_scikit_learn_matches_every_committed_model_card():
+    """A .joblib artifact is a pickle: loading it under another scikit-learn version is unsupported.
+
+    requirements.txt pins the version the committed models were trained with. If this fails, either run
+    `pip install -r requirements.txt` (your environment drifted) or retrain and recommit the models with the
+    new pin in the same PR (you bumped the pin).
+    """
+    import sklearn
+
+    cards = sorted(predict.MODELS_DIR.glob("*.json"))
+    for card_path in cards:
+        card = json.loads(card_path.read_text(encoding="utf-8"))
+        trained_with = card["environment"]["scikit-learn"]
+        assert trained_with == sklearn.__version__, (
+            f"{card_path.name} was trained with scikit-learn {trained_with} but {sklearn.__version__} is installed; "
+            "run `pip install -r requirements.txt`, or retrain the model if you changed the pin")

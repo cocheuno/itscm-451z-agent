@@ -11,7 +11,10 @@ pre-commit>=3.8
 mcp>=2.2
 # analytics/ML thread (A1 onward; see COURSE_CONTEXT.md)
 pandas>=2.2
-scikit-learn>=1.5
+# Pinned to the version the committed model artifacts were trained with (see each model card's
+# environment block). joblib/pickle files are not portable across scikit-learn versions; a mismatch
+# is at best a warning on load and at worst changed predictions. Bump this and retrain together.
+scikit-learn==1.5.2
 sentence-transformers>=3.0
 matplotlib>=3.9
 statsmodels>=0.14
