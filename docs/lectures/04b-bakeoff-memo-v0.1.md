@@ -185,7 +185,7 @@ back as the first KPIs.
 
 ## Check yourself
 
-1. Your table shows the LLM at 0.95 and the local model at 1.0. Which would you recommend for a desk whose
+1. Your table shows the LLM near 0.65 and the local models at 1.0. Which would you recommend for a desk whose
    real tickets are nothing like this corpus, and what would you ask for before deciding?
 2. What breaks if someone trains `category-v0.3` and pushes it without touching `.env`? (Nothing served
    changes, because the pin holds. Without the pin the agent would silently switch models.)
