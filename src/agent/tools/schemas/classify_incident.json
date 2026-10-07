@@ -1,0 +1,14 @@
+{
+  "name": "classify_incident",
+  "description": "Suggest a category for an incident from its text, with a confidence. The result is a suggestion from a model, not a decision; never state it to a customer as fact, and never use it to set priority.",
+  "action_tier": "read",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "short_description": {"type": "string"},
+      "description": {"type": "string"}
+    },
+    "required": ["short_description"],
+    "additionalProperties": false
+  }
+}
