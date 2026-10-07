@@ -9,6 +9,7 @@ What the agent is for; which ServiceNow tables and practices it touches; what it
 |---|---|---|---|
 | search_kb | read | — | — |
 | lookup_ci | read | — | — |
+| classify_incident | read | — | — |
 | find_similar_incidents | read | — | — |
 | assign_incident | execute_with_approval | | before-image |
 | add_comment | (decide; ADR) | | |
