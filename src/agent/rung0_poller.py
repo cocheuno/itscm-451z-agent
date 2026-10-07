@@ -31,6 +31,7 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
     from agent.servicenow.client import ServiceNowClient
+    from agent.analytics.predict import classify  # the served model; the LLM path is the bake-off's
 
     sn = ServiceNowClient.from_env()
     log = AuditLog()
@@ -38,9 +39,14 @@ def main() -> int:
         pred = classify_with_rules(t)
         log.write(AuditEntry(ticket=t["number"], tool="rules", tier="read", inputs={"rule": pred["rule"]},
                              reasoning=f"keyword rule {pred['rule']}", outcome=str(pred)))
-        print(t["number"], pred)
+        suggestion = classify(t)
+        log.write(AuditEntry(ticket=t["number"], tool="classify_incident", tier="read",
+                             inputs={"model_version": suggestion["model_version"]},
+                             reasoning="category model suggestion",
+                             outcome=str({"pred_category": suggestion["pred_category"],
+                                          "confidence": suggestion["confidence"]})))
+        print(t["number"], pred, suggestion["pred_category"])
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())
