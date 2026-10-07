@@ -1,7 +1,7 @@
-# ADR-NNNN: <short title>
+# ADR-0004: Gradient boosting as the second category-model candidate
 - **Status:** Accepted
 - **Date:** 2026-09-29
-- **Rung/Module:**  Rung 3/Module 4
+- **Rung/Module:** Rung 1 / Module 4
 - **Related Issue/PR:** #
 
 ## Context
