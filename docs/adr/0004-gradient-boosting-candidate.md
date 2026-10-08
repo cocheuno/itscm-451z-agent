@@ -2,7 +2,7 @@
 - **Status:** Accepted
 - **Date:** 2026-09-29
 - **Rung/Module:** Rung 1 / Module 4
-- **Related Issue/PR:** #
+- **Related Issue/PR:** #27
 
 ## Context
 The bake-off needs a non-linear candidate on the same split.
