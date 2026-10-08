@@ -1,9 +1,8 @@
-@'
 # ADR-0005: classify_incident as a read-tier tool
 - **Status:** Accepted
 - **Date:** 2026-10-07
 - **Rung/Module:** Rung 1 / Module 4
-- **Related Issue/PR:** #
+- **Related Issue/PR:** #27
 
 ## Context
 The agent needs model inference as something it can call and audit, the same way it calls the ServiceNow read tools. Calling `predict.classify` directly from agent code would bypass the registry, so there would be no tier and no audit entry for the suggestion.
@@ -20,4 +19,3 @@ One audit entry per suggestion, tagged `classify_incident` with the model versio
 
 ## Action-tier impact
 Adds a read-tier tool. `docs/governance/governance.md` section 2 gains the row `classify_incident | read` in the same PR.
-'@ | Set-Content -Encoding utf8 docs\adr\0005-classify-incident-tool.md
