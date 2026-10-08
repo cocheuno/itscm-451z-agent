@@ -30,8 +30,8 @@ def main() -> int:
     ap.add_argument("--since", required=True, help="ISO timestamp watermark")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
-    from agent.servicenow.client import ServiceNowClient
     from agent.analytics.predict import classify  # the served model; the LLM path is the bake-off's
+    from agent.servicenow.client import ServiceNowClient
 
     sn = ServiceNowClient.from_env()
     log = AuditLog()
