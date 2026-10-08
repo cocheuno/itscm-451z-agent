@@ -1,97 +1,108 @@
-# Module 2 close-out: make the agent see the data (Rung 0)
+# Module 2: make the program see the data (Rung 0)
 
-Delivered Tuesday, Sep 15. Rewritten Sep 19 as a complete walkthrough, because the session was spent
-re-cloning and most of the steps below were not reached. Work through it in order before Module 4 starts on
-Sep 22. Checklist and rubric: [handout](../exercises/2026-09-15-rung0-closeout.md).
+Before this lecture, read [Getting started](00-getting-started.md) and do its setup. This page assumes a
+terminal open in your clone with `(.venv)` showing in the prompt. Checklist and rubric:
+[handout](../exercises/2026-09-15-rung0-closeout.md).
+
+Commands are for Windows. Where a Mac differs, a **Mac:** box follows.
 
 ## What you will be able to do afterwards
 
-1. Explain what Rung 0 of the agent is and why the course starts with a program that has no AI in it.
-2. Run the poller against your own ServiceNow instance and read its audit log.
-3. Finish two pieces of code the poller needs (paging through results, keyword rules) and prove they work
-   with tests.
-4. Load a CSV of 4,242 closed incidents into pandas and answer four questions about the service desk.
-5. Push the work as a pull request and tag the result `v0.0`.
+1. Say what Rung 0 is and why the course starts with a program that contains no AI.
+2. Run the poller against your own ServiceNow instance and read the log it writes.
+3. Finish two small pieces of code the poller needs, and prove they work with the tests.
+4. Open a table of 4,242 closed tickets in pandas and answer four questions a service-desk analyst would be
+   asked in their first week.
+5. Save your work as a commit on a branch, tag it `v0.0`, and write the first page of your journal.
 
 ## Why this session exists
 
-The course builds one agent in six rungs. Each rung adds one capability and is tagged when it is done:
+The course builds one program, the agent, in six steps called rungs. Each rung adds one ability:
 
-| Rung | What the agent can do | Tag |
+| Rung | What the program can do | Tag |
 |---|---|---|
 | 0 | Read new tickets and apply fixed keyword rules. No AI. | `v0.0` |
-| 1 | Classify tickets with trained models and score itself against ground truth | `v0.1` |
-| 2 | Retrieve similar incidents and knowledge articles; compute KPIs | `v0.2` |
-| 3 | Take actions in ServiceNow, under approval and with rollback | `v0.3` |
-| 4 | Run a request workflow with SLA timers and breach-risk scoring | `v0.4` |
-| 5 | Cluster incidents into problems and draft change requests | `v0.5` |
-| 6 | Watch itself: dashboards, failure injection, drift detection | `v1.0` |
+| 1 | Sort tickets into categories with a trained model, and measure how often it is right | `v0.1` |
+| 2 | Find similar past tickets and knowledge articles; compute service-desk KPIs | `v0.2` |
+| 3 | Change things in ServiceNow, with approval and a way to undo | `v0.3` |
+| 4 | Run a request workflow with clocks and breach-risk scores | `v0.4` |
+| 5 | Group related incidents into problems and draft change requests | `v0.5` |
+| 6 | Watch itself: dashboards, failure drills, drift detection | `v1.0` |
 
-Rung 0 has no AI on purpose. Before a model is allowed to make a decision, three plumbing pieces must
-exist and be trusted: the agent can **read from ServiceNow**, it **writes an audit entry for every decision**,
-and its code **reaches `main` only through a pull request**. If any of these is missing, nothing built on top
-can be graded, debugged, or rolled back. Rung 0 is the proof that they exist.
+**Why no AI today.** Before any model is allowed to decide anything, three plain things must work and be
+trusted: the program can read from ServiceNow, it writes a log line for every decision, and its code is
+saved in git with a history. If any of those is missing, nothing built on top can be checked, fixed, or
+undone. Rung 0 proves they exist.
 
-**Where analytics fits.** The course has three threads: the capability ladder above, version management (every
-assignment is a merged pull request plus a Git tag), and analytics (the agent measures and models the desk it
-runs). The analytics thread starts today in Part 3. Before anyone trains a model on this data, the analyst
-looks at it. The four questions in Part 3 are the questions a new service-desk analyst would be asked in their
-first week, and their answers become the baseline every later model is compared against.
+**Where the analytics starts.** This course is about measuring a service desk and modelling it, with the
+agent as the thing that acts on the measurements. Every later model learns from one table,
+`incidents_history.csv`. Part 3 of today is the first time you look at that table, and the questions you
+answer there become the baseline: the numbers every later model must explain or beat. An analyst who trains
+a model before looking at the data cannot tell a real finding from a bug.
 
 ## Words you need
 
-- **PDI**: your personal developer instance of ServiceNow. It is a real ServiceNow, empty until you load it.
-- **Incident**: a ticket. The `incident` table holds them. Each has a `sys_id` (a 32-character unique key),
-  a `number` like `INC0010042`, a `short_description`, a `description`, `impact` and `urgency` (1 to 3),
-  a `category`, and an `assignment_group`.
-- **Table API**: ServiceNow's REST interface. `GET /api/now/table/incident?sysparm_limit=100` returns up to
-  100 incidents as JSON. The agent's client wraps this in `src/agent/servicenow/client.py`.
-- **Service account**: a ServiceNow user that exists for a program, not a person. It has a password but
-  cannot log in to the web interface.
-- **Poller**: a program that asks "what is new since the last time I looked?" on a schedule. The watermark is
-  the timestamp of the last look.
-- **Audit log**: an append-only file, one JSON line per decision, in `logs/audit.jsonl`. Every rung writes
-  to it. Never edited by hand.
-- **Corpus**: the synthetic data set the course runs on. `data/eval/incidents_history.csv` holds 4,242 closed
-  incidents from March to August 2026; `data/eval/incidents_open.csv` holds 150 open ones for September.
-- **Ground truth**: the correct answer for a ticket, known because the data was generated from it. In the
-  open set these are the `gt_*` columns. Grading uses them; your code never reads them while classifying.
+- **PDI:** your personal ServiceNow instance, in the cloud, with your own admin login. Empty until a script
+  fills it.
+- **Incident:** a ticket. Each has a `number` like `INC0010042`, a `short_description` (one line), a
+  `description` (the longer text), `impact` and `urgency` (1 high to 3 low), a `category`, and an
+  `assignment_group` (the team it goes to).
+- **Service account:** a ServiceNow login that exists for a program, not a person. It has a password but
+  cannot use the web screens. The agent logs in as this account, never as you.
+- **Poller:** a program that asks "what tickets are new since the last time I looked?" The time of the
+  last look is the **watermark**.
+- **Classifier:** anything that takes a ticket's text and returns a category. Today's classifier is a list
+  of keyword rules. Thursday's is a trained model. Both are judged the same way.
+- **Accuracy:** the share of tickets a classifier gets right, measured on tickets whose right answer is
+  known. 0.15 means 15 in 100.
+- **Audit log:** a file, `logs/audit.jsonl`, with one line per decision the program makes. Lines are only
+  ever added, never edited. Every rung writes to it.
+- **Ground truth:** the correct answer for a ticket. Known here because the course data was generated from
+  it. The scoring program reads it; your code never does.
+- **Median:** the middle value when numbers are sorted. Half the tickets took less, half took more. Used
+  instead of the average because a few extreme tickets drag an average around and leave a median alone.
+- **Breach:** a ticket that missed its resolution deadline. The breach rate is the share that missed.
 
 ## Before you start
 
-You need the fresh clone from the [handout](../exercises/2026-09-15-rung0-closeout.md) section "Update your
-clone". Prove it, in a terminal inside the `itscm-451z-agent` folder with the virtual environment active
-(the prompt shows `(.venv)`):
+In your terminal, in the clone, with `(.venv)` showing:
 
 ```
-git log --oneline -1
-pytest -q
+git checkout main
+git pull origin main
+python -m pytest -q
+git checkout -b module-02
 ```
 
-Expected: the first line shows a recent merge commit from `cocheuno/itscm-451z-agent`, and pytest ends with
-`passed` and `1 skipped`. The exact count grows as the repo grows; the skip is the pagination test you turn
-green in Part 2. If pytest reports 6 tests, you are in the old folder; go back to the handout.
+Expected: the pull ends `Already up to date.` or lists files it updated; pytest ends with a line like
+`70 passed, 1 skipped`; the last command prints `Switched to a new branch 'module-02'`. The one skipped
+test is the paging check you make pass in Part 2.
+
+If pytest reports only a handful of tests, you are in an old clone. Go back to Getting started and make a
+fresh one.
 
 ## Part 1: a service account on your PDI (20 min)
 
 ### Why
 
-The agent talks to ServiceNow with a username and password over HTTPS ("basic auth"). Your PDI refuses basic
-auth for any account that can log in interactively, including `admin`; the instance log shows the refusal as
-`SNCRestrictBasicAuthUserAuthenticationGate`. So the agent needs an account that exists only for programs.
-This is also the right posture: an agent that runs as `admin` can do anything, and later rungs are about
-proving it can do only what it is allowed to do.
+The program logs in to ServiceNow with a username and password. Your PDI refuses that kind of login for any
+account a person could use in a browser, including `admin`. So the program needs an account that exists
+only for programs. That is also good practice: a program running as `admin` can do anything, and later rungs
+are about proving the program can do only what it is allowed to.
+
+**If you did this on Sep 15:** run step 6 below. If it prints a list, skip to Part 2.
 
 ### Steps
 
-1. Log in to your PDI as `admin` in the browser. In the filter navigator (the search box top left) type
-   `sys_user.list` and press Enter. This opens the user table.
+1. In your browser, log in to your PDI as `admin`. In the search box at the top left (the filter
+   navigator) type `sys_user.list` and press Enter. A list of users opens.
 2. Click **New**. Fill in: User ID `agent_svc`, First name `Agent`, Last name `Service`. If the form shows
-   **Identity type**, choose **Machine**. Set a password (write it down; you need it in step 5). Submit.
-3. Open the record you just made. Scroll to **Roles**, click **Edit**, add `itil` and `itil_admin`, Save.
-   `itil` lets the account read and update incidents; `itil_admin` adds the tables later rungs need.
-4. The form hides the two flags that mark the account as non-interactive, so set them with a script. In the
-   filter navigator type `sys.scripts.do` and press Enter. Paste this into the box and click **Run script**:
+   **Identity type**, choose **Machine**. Type a password and write it down. Click **Submit**.
+3. Click the `agent_svc` row to open it. Scroll to the **Roles** tab, click **Edit**, move `itil` and
+   `itil_admin` to the right-hand list, click **Save**.
+4. Two settings that mark the account as program-only are hidden from the form, so a script sets them. In
+   the filter navigator type `sys.scripts.do` and press Enter. Paste this into the big box and click
+   **Run script**:
 
    ```javascript
    var gr = new GlideRecord('sys_user');
@@ -108,71 +119,70 @@ proving it can do only what it is allowed to do.
    }
    ```
 
-   Expected output on the page: `agent_svc: wsao=1 integration=1`. If it says `not found`, the User ID in
+   Expected, printed on the page: `agent_svc: wsao=1 integration=1`. If it says `not found`, the User ID in
    step 2 is not exactly `agent_svc`.
-5. In the repo, open `.env` (create it with `cp .env.example .env` if it does not exist). Set:
+5. In your editor, open `.env` in the clone and set these three lines (keep every other line):
 
    ```
-   SN_INSTANCE=https://devNNNNNN.service-now.com     # your instance, no trailing slash
+   SN_INSTANCE=https://devNNNNNN.service-now.com
    SN_USER=agent_svc
    SN_PASSWORD="the password from step 2"
    ```
 
-   Leave the other lines as they are for now. `.env` is git-ignored; it never leaves your laptop.
-6. Prove it works. Two commands:
+   `devNNNNNN` is your instance's name from the browser address bar, with no slash at the end. Keep the
+   quotes around the password.
+6. Prove it. Two commands:
 
    ```
    python -m agent.config
    python -c "from agent.servicenow.client import ServiceNowClient as C; print(C.from_env().list('incident', limit=1))"
    ```
 
-   Expected: `config ok — instance https://devNNNNNN.service-now.com, model claude-sonnet-4-6, mode dry_run`,
-   then `[]` (an empty list, because your PDI has no incidents yet) or one record in braces.
+   Expected: a line starting `config ok`, then either `[]` (your PDI has no incidents yet) or one record in
+   curly braces.
 
 ### If it fails
 
-- `401` in the second command: the flags did not take. Re-run step 4 and read its output line. If the
-  password has a `#` or `"` in it, wrap the whole value in double quotes in `.env`.
-- `missing environment variable`: the `.env` line is missing or misspelled. Names are case-sensitive.
-- The first command says `.env is tracked by git`: you ran `git add .env` at some point. Run
-  `git rm --cached .env` and never add it again.
+- The second command ends in `401`: the two settings did not take. Run step 4 again and read its output.
+- `missing environment variable`: a line in `.env` is missing or misspelled. Names are case-sensitive.
+- `.env is tracked by git`: at some point `git add .env` was run. Run `git rm --cached .env` once, and never
+  add it again.
 
-## Part 2: seed, paginate, poll (25 min)
+## Part 2: load tickets, page through them, apply rules (25 min)
 
 ### Why
 
-The poller cannot be tested against an empty instance, so first you load the 150 open tickets. Then two
-`TODO(student)` markers in the code become yours: **paging** (the API returns at most a page at a time, and
-a poller that reads only the first page silently misses tickets) and **rules** (the simplest possible
-classifier, so that when a model replaces it on Thursday there is a number to beat).
+You cannot test a poller on an empty instance, so first you load 150 open tickets. Then two gaps in the
+code marked `TODO(student)` become yours. **Paging:** ServiceNow hands back at most 100 records per request,
+so a program that reads one page silently misses ticket 101. **Rules:** the simplest possible classifier,
+so that when a model replaces it on Thursday there is a number to beat.
 
 ### Step 1: load the open set
 
 ```
-python scripts/seed_pdi.py
+python scripts\seed_pdi.py
 ```
 
-Expected output (paths will be yours):
+> **Mac:** `python scripts/seed_pdi.py`
+
+Expected, after about a minute:
 
 ```
-seeded 150 open tickets; ground truth -> .../data/synthetic/ground_truth.csv; eval set -> .../data/synthetic/eval_set.jsonl
+seeded 150 open tickets; ground truth -> ...\data\synthetic\ground_truth.csv; eval set -> ...\data\synthetic\eval_set.jsonl
 ```
 
-Two files were written on your laptop. `ground_truth.csv` maps each ticket in your PDI to its correct answers
-(git-ignored; it is the answer key). `eval_set.jsonl` is the 40 tickets held out for scoring; the number is
-40 rather than exactly 30 because the 20 percent holdout is drawn ticket by ticket with a fixed seed. Both
-files are git-ignored because they carry the sys_ids of *your* PDI. A reference copy of the eval set, with
-the same 40 tickets and answers, is committed at `data/eval/eval_set.jsonl`; the harness reads your local
-copy when it exists and the committed one otherwise, and scores the same either way. Note the time you ran
-this; it is the watermark for step 4.
+Two files were written on your laptop, both ignored by git because they carry your PDI's record IDs.
+`ground_truth.csv` is the answer key for your 150 tickets. `eval_set.jsonl` lists the 40 tickets held out
+for scoring. **Write down the time you ran this, and convert it to UTC** (Central Daylight Time plus five
+hours). You need it in step 4.
 
-If you have seeded before and want a clean start: `python scripts/reset_pdi.py` deletes every record the
-seeder created (they all start with the `[SYN]` marker) and nothing else.
+If you loaded tickets before and want a clean start, `python scripts\reset_pdi.py` deletes every record the
+loader created and nothing else.
 
 ### Step 2: paging
 
-Open `src/agent/servicenow/client.py`. `list()` fetches one page; `list_all()` is the TODO. Replace its
-body with:
+Open `src\agent\servicenow\client.py` in your editor. Find `def list_all`. Its body is two lines: a
+docstring and `raise NotImplementedError`. Replace the whole function with:
 
 ```python
     def list_all(self, table: str, query: str = "", fields: list[str] | None = None, page: int = 100) -> list[dict]:
@@ -187,28 +197,33 @@ body with:
             offset += page
 ```
 
-Line by line: `out` accumulates records; `offset` is how many to skip; each loop asks for one page starting
-at `offset`; a page shorter than `page` means the server ran out, so return; otherwise move the offset by one
-page. The acceptance test was written before you started:
+Indentation matters in Python: the `def` line starts four spaces in, the body eight. Copy the block as is.
+
+What it does, line by line: `out` collects records; `offset` is how many to skip; each loop asks for one
+page starting at `offset` and adds it to `out`; a page shorter than 100 means the server has no more, so
+return everything; otherwise skip forward one page and ask again. Prove it:
 
 ```
-pytest tests/test_client_pagination.py -v
+python -m pytest tests\test_client_pagination.py -v
 ```
 
-Expected: `PASSED` (it was `SKIPPED` before). The test feeds seven fake records in pages of three and checks
-you asked for offsets 0, 3 and 6 and got all seven back, in order, once each.
+Expected: a line ending `PASSED` where it said `SKIPPED` before. The test hands your function seven fake
+records in pages of three and checks you asked for offsets 0, 3 and 6 and got all seven back, in order,
+once each.
 
 ### Step 3: rules
 
-Open `src/agent/rung0_poller.py`. `RULES` is a list of `(keyword, category, assignment_group)`. Three are
-there as examples. The rule is: lower-case the ticket's short description plus description, and the first
-keyword found wins. Your job is three to five rules that are true of *your* tickets, so look at them first.
-In your PDI, open the incident list (filter navigator: `incident.list`), sort by number, and read twenty
-short descriptions. Then choose keywords. Category values must be spelled exactly as the course uses them:
-`Network`, `Hardware`, `Software`, `Database`, `Inquiry / Help`, `Security`. Assignment groups you will see in
-the data: `Network Ops`, `Desktop Support`, `Application Support`, `DBA`, `Service Desk L1`, `Security Ops`.
+Open `src\agent\rung0_poller.py`. Near the top is `RULES`, a list of three entries, each
+`(keyword, category, assignment_group)`. The program lower-cases a ticket's short description and
+description, looks for each keyword in order, and the first one found decides the category and the team.
 
-A reasonable set, which you should change based on what you read:
+Your job: three to five rules that fit *your* tickets. First read some. In your PDI, filter navigator,
+type `incident.list`, press Enter, and read twenty short descriptions. Then choose keywords. Spell the
+categories exactly as the course does: `Network`, `Hardware`, `Software`, `Database`, `Inquiry / Help`,
+`Security`. Teams you will see: `Network Ops`, `Desktop Support`, `Application Support`, `DBA`,
+`Service Desk L1`, `Security Ops`.
+
+A reasonable start, which you should change from what you read:
 
 ```python
 RULES: list[tuple[str, str, str]] = [
@@ -220,9 +235,14 @@ RULES: list[tuple[str, str, str]] = [
 ]
 ```
 
-Order matters: a ticket saying "cannot print the ERP report" matches `printer` if that rule comes first. Run
-`pytest tests/test_rules.py` to confirm the two existing tests still pass (the first rule must still send
-"VPN drops" to Network).
+Order matters. A ticket saying "cannot print the ERP report" matches `printer` if that rule comes first.
+Keep the `vpn` rule first; a test depends on it. Then:
+
+```
+python -m pytest tests\test_rules.py -v
+```
+
+Expected: two `PASSED` lines.
 
 ### Step 4: run the poller
 
@@ -230,22 +250,22 @@ Order matters: a ticket saying "cannot print the ERP report" matches `printer` i
 python -m agent.rung0_poller --since "2026-09-15 18:00:00" --dry-run
 ```
 
-Replace the timestamp with the time you seeded, in UTC, in that format. The poller asks ServiceNow for
-incidents created after the watermark, applies the rules, prints one line per ticket, and writes an audit
-entry per ticket. Expected: 150 lines like
+Replace the time with your seeding time from step 1, in UTC, in that exact shape with the quotes. The
+poller asks ServiceNow for incidents created after that time, applies your rules, prints one line per
+ticket, and writes a log line per ticket. Expected: 150 lines like
 
 ```
 INC0010001 {'pred_category': 'Network', 'pred_assignment_group': 'Network Ops', 'rule': 'vpn'}
 INC0010002 {'pred_category': None, 'pred_assignment_group': None, 'rule': None}
 ```
 
-Most lines will say `None`. That is the point. Now look at the audit log: `logs/audit.jsonl` has 150 new
-lines. Open one. Every field in it (`ticket`, `tool`, `tier`, `inputs`, `reasoning`, `outcome`, `ts`) is
-something a later rung, or an auditor, will need. Nothing the agent does from here on is allowed to skip
-this file.
+Most lines say `None`: no rule matched. That is expected with five keywords. Now open `logs\audit.jsonl`
+in your editor. It has 150 new lines. Read one. Every field (`ticket`, `tool`, `tier`, `inputs`,
+`reasoning`, `outcome`, `ts`) is something a later rung, or an auditor, will need. Nothing the program does
+from here on is allowed to skip this file.
 
-If the poller returns nothing: the watermark is after your seeding time, or is in local time rather than
-UTC. ServiceNow stores UTC. Use an earlier time; too early only means more tickets.
+If the poller prints nothing: the time is later than your tickets, or in local time instead of UTC. Use an
+earlier time. Too early only means more tickets.
 
 ### Step 5: score the rules
 
@@ -253,9 +273,10 @@ UTC. ServiceNow stores UTC. Use an earlier time; too early only means more ticke
 python -m eval.harness --rung 0
 ```
 
-Expected shape:
+Expected shape; your numbers depend on your rules:
 
 ```
+eval set: data\synthetic\eval_set.jsonl (40 tickets)
 | Metric | Value |
 |---|---|
 | n | 40 |
@@ -269,31 +290,41 @@ Expected shape:
 - FAIL routing_accuracy: 0.15 vs threshold 0.75
 ```
 
-Read it this way. `n` is the 40 held-out tickets. `classification_accuracy` is the share whose predicted
-category equals the ground truth; with three to five keywords expect 0.1 to 0.3. `priority_sla_agreement` is
-0.0 because the rules do not set a priority at all; Module 3 fixes that. `routing_accuracy` is about the
-assignment group. The FAIL lines are the thresholds the models must clear later. A Rung 0 run is supposed to
-fail them; write the table into your PR anyway, it is the baseline.
+How to read it. `n` is the 40 held-out tickets, the ones the scoring program keeps aside so that no
+classifier is scored on tickets it was built from. `classification_accuracy` is the share whose predicted
+category equals the ground truth; with five keywords expect 0.1 to 0.3. `priority_sla_agreement` is 0.0
+because rules do not set a priority at all; Module 3 adds that. `routing_accuracy` is the same idea for the
+team. The FAIL lines are the bars every later model must clear. Rung 0 is supposed to fail them. Copy the
+whole table into your journal in the Deliverable section; it is the baseline.
 
 ## Part 3: first look at the history (30 min)
 
 ### Why
 
-Every model in this course is trained on `incidents_history.csv`. Before training anything, the analyst
-answers four questions with a table each, because a model that "discovers" something you could have read
-from a pivot table has told you nothing, and a model that contradicts the pivot table is probably wrong. The
-four questions are also the shape of the KPI work in A2.
+Every model in this course learns from `data\eval\incidents_history.csv`: 4,242 closed tickets, one per
+row, 22 columns. Before anyone trains on a table, the analyst looks at it and answers the obvious
+questions with a table each. Two reasons. A model that "discovers" something you could have read off a
+pivot table has told you nothing. And a model that contradicts the pivot table is probably broken. The four
+questions below are also the shape of the KPI work in assignment A2.
 
-Why the CSV and not your PDI: the instance overwrites every timestamp with the moment you loaded the record,
-so the PDI copy of the history knows nothing about time (ADR-0002 records this). The CSV is the only source
-of time.
+Why the file and not your PDI: when the history was loaded into a PDI, ServiceNow stamped every date with
+the moment of loading, so the PDI copy knows nothing about time. The file is the only source of dates.
+
+### How the notebook works
+
+Open `notebooks\01_history_eda.py` in VS Code. It is a Python file split into cells by lines that start
+`# %%`. Above each cell VS Code shows a small **Run Cell** link. Clicking it runs that cell and shows the
+result in a panel on the right. Cells run in order, so always start from the top. If the panel asks which
+Python to use, pick the one with `.venv` in its path.
 
 ### Steps
 
-1. In VS Code, open `notebooks/01_history_eda.py`. It is a script with `# %%` markers; VS Code shows a
-   **Run Cell** link above each one. Click the first (the imports and `load_history`). The interactive window
-   opens and prints `(4242, 22)`: 4,242 rows, 22 columns.
-2. Run the Question 1 cell. Expected:
+1. Run the first cell (the imports and `load_history`). Expected in the panel: `(4242, 22)`, which is rows
+   and columns, then the first five rows. Scroll across them. Notice the columns you will use today:
+   `opened_at` (a date and time), `category`, `subcategory`, `priority` (1 to 5), `resolve_minutes`,
+   `made_sla` (True or False).
+
+2. **Question 1, volume by weekday.** Run the cell. Expected:
 
    ```
    Monday       1153
@@ -305,68 +336,133 @@ of time.
    Sunday        117
    ```
 
-   The code: `df["opened_at"].dt.day_name()` turns each timestamp into a weekday name; `.value_counts()`
-   counts them; `.reindex([...])` puts the days in calendar order instead of largest-first.
-3. Run the Question 2 cell. Expected: `Inquiry / Help 0.288`, `Network 0.214`, `Hardware 0.181`,
-   `Software 0.168`, `Security 0.085`, `Database 0.064`. `value_counts(normalize=True)` gives shares
-   instead of counts. The next cell is yours: the top three subcategories inside `Inquiry / Help`. One line
-   does it: `df[df["category"] == "Inquiry / Help"]["subcategory"].value_counts().head(3)`.
-4. Run the Question 3 cell. It adds a `month` column and pivots: rows are months, columns are categories,
-   cells are the median `resolve_minutes`. Read down the Hardware column: 640, 1161, 1834, 2333, 2453, 2799.
-   Every other column wobbles around a level. Write down what you see; do not explain it yet.
-5. Run the Question 4 cell. `made_sla` is True when the ticket met its resolution target; `1 - mean` is the
-   breach rate. Expected: P1 0.617, P2 0.493, P3 0.363, P4 0.301, P5 0.106.
-6. Run the optional chart cell if matplotlib is installed. Two plots appear in the interactive window.
-7. In the last cell, write five observations. Each must name a number from a table above. "Monday has 1,153
-   incidents, 1.6 times the Tuesday count" is an observation. "Mondays are busy" is not.
+   What the code did: took the `opened_at` column, turned each date into its weekday name, counted how many
+   of each, and listed them Monday to Sunday. The analytics point: a count by group is the first thing to
+   look at in any operational data, because staffing follows it. Monday is 1,153 against about 700 on the
+   other weekdays. Ask yourself what a desk would do with that number.
+
+3. **Question 2, category mix.** Run the cell. Expected, as shares that add to 1:
+
+   ```
+   Inquiry / Help    0.288
+   Network           0.214
+   Hardware          0.181
+   Software          0.168
+   Security          0.085
+   Database          0.064
+   ```
+
+   A share is a count divided by the total; `normalize=True` asks for shares instead of counts. Two things
+   to see. The classes are unequal: Inquiry / Help is four and a half times Database. On Thursday that
+   inequality is why accuracy alone can mislead, since a model that is excellent on the big classes and
+   useless on Database still posts a high accuracy. And the biggest class, Inquiry / Help, is a catch-all,
+   so the next cell asks what is inside it.
+
+   The next cell is yours. It says `# TODO(student)`. Replace that comment with this one line:
+
+   ```python
+   print(df[df["category"] == "Inquiry / Help"]["subcategory"].value_counts().head(3))
+   ```
+
+   Reading it from the inside out: keep only rows whose category is Inquiry / Help; take their
+   `subcategory` column; count each value; show the top three. Run the cell and note the three names and
+   counts.
+
+4. **Question 3, median resolve time by category and month.** Run the cell. It makes a table with months
+   down the side and categories across the top, and in each cell the median `resolve_minutes` for that
+   month and category. This shape is called a pivot table; Excel makes the same thing. Read down the
+   Hardware column: 640, 1161, 1834, 2333, 2453, 2799. Every other column wobbles around one level.
+
+   Why the median: resolve times are skewed, a few tickets take weeks, and those would drag an average up
+   and hide the pattern. The median ignores them. Write down what you see in the Hardware column, and do
+   not explain it yet. Naming a pattern is one skill; explaining it is a later one.
+
+5. **Question 4, breach rate by priority.** Run the cell. Expected:
+
+   ```
+             n  breach_rate
+   priority
+   1         ...  0.617
+   2         ...  0.493
+   3         ...  0.363
+   4         ...  0.301
+   5         ...  0.106
+   ```
+
+   `made_sla` is True when a ticket met its resolution deadline, so one minus its average is the share that
+   missed. The `n` column is how many tickets each rate is based on; a rate from 30 tickets deserves less
+   trust than one from 1,500. Priority 1 tickets, the most urgent, miss their deadline 62 percent of the
+   time. That is the number a service-desk manager would ask about first.
+
+6. Run the optional chart cell. Two plots appear: tickets opened per week, and the monthly median resolve
+   time per category. Find the Hardware line.
+
+7. In the last cell, write five observations as comment lines. Each must name a number from a table above.
+   "Monday has 1,153 incidents, 1.6 times the Tuesday count" is an observation. "Mondays are busy" is not.
+   Save the file.
 
 ### If it fails
 
-- `ModuleNotFoundError: agent`: the interactive window is using the wrong Python. Bottom right of VS Code,
-  click the interpreter and pick `.venv`. Or run `pip install -e .` in the terminal and restart the window.
-- `ModuleNotFoundError: pandas`: `pip install -r requirements.txt` did not finish. Run it again and read
-  the last error.
+- `ModuleNotFoundError: No module named 'agent'`: the panel is using the wrong Python. Bottom right of VS
+  Code, click the Python version and choose the one under `.venv`. Then run the cells again from the top.
+- `ModuleNotFoundError: No module named 'pandas'`: the install did not finish. In the terminal,
+  `python -m pip install -r requirements.txt`, then restart the panel.
 
 ## Deliverable
 
-One pull request. Step by step:
+Your work is saved on your branch and written up in your journal. No pull request, no push.
 
-```
-git checkout -b feature/rung0-closeout
-git add src/agent/servicenow/client.py src/agent/rung0_poller.py notebooks/01_history_eda.py
-git status
-```
+1. Create the journal file `docs\journal\module-02.md` with this content, filled in:
 
-`git status` must not list `.env`, `ground_truth.csv`, `eval_set.jsonl` or anything under `logs/`. If it
-does, stop and ask. Then:
+   ```markdown
+   # Module 2: Rung 0 close-out
 
-```
-git commit -m "Rung 0 close-out: pagination, keyword rules, history EDA"
-git push -u origin feature/rung0-closeout
-```
+   ## What I changed
+   - `list_all` in the ServiceNow client: pages through results.
+   - Five keyword rules in the poller: <list your keywords>.
+   - The EDA notebook: top-three subcategories cell, five observations.
 
-The push prints a link to open the pull request. Open it, and fill in the template: Rung 0; what changed
-(three things); the harness table from Part 2 step 5 pasted into "Eval results"; "ADRs touched: none"; tick
-the checklist honestly; disclose any AI help. Mark it ready for review. When the instructor merges:
+   ## Harness table for --rung 0
+   <paste the table from Part 2 step 5>
 
-```
-git checkout main
-git pull origin main
-git tag -a v0.0 -m "Rung 0: rules poller"
-git push origin v0.0
-```
+   ## Five observations
+   <paste them from the notebook>
 
-The tag is the record that Rung 0 exists. Every later rung gets one.
+   ## Help I used
+   <anything a person or an AI assistant helped with, in one or two lines>
+   ```
+
+2. Check what changed, then save the snapshot:
+
+   ```
+   git status
+   git add src\agent\servicenow\client.py src\agent\rung0_poller.py notebooks\01_history_eda.py docs\journal\module-02.md
+   git status
+   git commit -m "Rung 0 close-out: pagination, keyword rules, history EDA, journal"
+   git tag -a v0.0 -m "Rung 0: rules poller"
+   git log --oneline -3
+   ```
+
+   > **Mac:** forward slashes in the `git add` line.
+
+   The first `git status` lists four modified or new files; it must not mention `.env`, `ground_truth.csv`,
+   `eval_set.jsonl` or anything under `logs`. If it does, stop and ask before adding anything. The second
+   `git status` shows the four files under "Changes to be committed". The commit prints a line with the
+   message and `4 files changed`. The log shows your commit on top with `(HEAD -> module-02, tag: v0.0)`.
+
+That is Rung 0. In class, you open `git log`, the journal, and the notebook, and walk through them.
 
 ## Check yourself
 
-1. Why does the poller need `list_all` when `list` already works? (A page is at most 100 records; a poller
-   that reads one page misses ticket 101 forever and never knows.)
+1. Why does the poller need `list_all` when `list` already works? (A page holds at most 100 records; a
+   poller that reads one page misses ticket 101 forever and never knows.)
 2. Where is the correct category for ticket `INC0010042` stored, and who may read it? (In
-   `data/synthetic/ground_truth.csv` on your laptop and in the `gt_category` column of the eval set. The
-   harness reads it to score you. Your classifier never does.)
-3. The harness says `priority_sla_agreement 0.0`. Is the poller wrong? (It is incomplete: it never sets a
-   priority. Module 3 adds the rule.)
+   `ground_truth.csv` on your laptop and in the `gt_category` column of the eval set. The scoring program
+   reads it to grade you. Your classifier never does.)
+3. The harness says `priority_sla_agreement 0.0`. Is the poller wrong? (Incomplete, not wrong: it never
+   sets a priority. Module 3 adds that rule.)
 4. Hardware's median resolve time went from 640 minutes in March to 2,799 in August. Name two explanations
-   the table cannot distinguish between. (Hardware tickets got harder; the Hardware team got slower or
-   smaller. Both raise the median. A2 asks you to tell them apart.)
+   the table cannot tell apart. (Hardware tickets got harder; the Hardware team got slower or smaller. Both
+   raise the median. A2 asks you to separate them.)
+5. Why use the median resolve time rather than the average? (A few tickets that took weeks would pull the
+   average up and hide the month-to-month pattern; the median is not moved by them.)

@@ -6,8 +6,13 @@ checks to run before starting, every step with the command, its expected output 
 fails, the deliverable, and check questions. The handouts in `docs/exercises/` are the checklist and rubric
 for the same session; the lecture is the explanation.
 
+Start with [Getting started](00-getting-started.md): the terminal, Python, git from zero, and the routine
+for each module. The student's work stays on their laptop, one branch per module, written up in
+`docs/journal/`; the instructor's changes arrive with `git pull`.
+
 | Date | Module | Lecture | Handout |
 |---|---|---|---|
+| before Module 2 | 0 | [Getting started](00-getting-started.md) | — |
 | 2026-09-15 | 2 | [Make the agent see the data (Rung 0 close-out)](02-rung0-closeout.md) | [handout](../exercises/2026-09-15-rung0-closeout.md) |
 | 2026-09-17 | 3 | [SLAs, the first real classifier, ground truth, and pull requests](03-sla-rung1-eval-prs.md) | [handout](../exercises/2026-09-17-first-classifier.md) |
 | 2026-09-22 | 4 | [Build week: classifier and eval harness](04a-gbm-and-llm-classifiers.md) | (steps are in the lecture) |
