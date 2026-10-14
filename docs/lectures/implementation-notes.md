@@ -1,4 +1,4 @@
-# Implementation notes, Modules 3 to 5
+# Implementation notes, Modules 3 to 8
 
 Instructor-facing. For each module: what the repository already provides, what the student is expected to
 write, how to verify a submission in two minutes, the instance quirks that will bite, and the decisions
@@ -129,12 +129,132 @@ signatures, so nothing in the registry or the MCP server changes. `lookup_ci` re
 purpose; the rule lives in the Module 12 output filter, and lecture 05b makes the student watch a real
 client repeat an IP address so the rule has a face.
 
+## Module 6: folded into Modules 7 and 8 (decision of Oct 14)
+
+Not taught. The instructor chose to skip the agent-loop module and go to change management. What moved
+where: the KPI functions and the routing table ship as scaffold in Module 8 (read, not written); sentence
+embeddings and the LLM tool loop move to Rung 4 (Module 9 onward); the Service Desk Health Report is
+dropped from A2. There is no `v0.2` tag; the student's next tag is `v0.3` on `module-07`. A2's grading is
+the instructor's call and is not encoded anywhere in the repository. `COURSE_CONTEXT.md` carries a dated
+note under the analytics thread; its ladder table is unchanged because the rungs themselves did not move.
+
+## Module 7 (week of Oct 13): change management, tiers, approvals, before-image, rollback
+
+**Scaffolded.** `agent.approvals` (append-only `logs/approvals.jsonl`, four transitions, `verify` by tool
+and idempotency key, a CLI that insists on `--as NAME`); `agent.tools.writes` (`assign_incident`,
+`resolve_incident`, `add_comment`, each checking the incident and the group exist, dry run by default
+from `AGENT_MODE`, before-image on every result); schemas `add_comment.json` at `propose` and
+`resolve_incident.json` at `execute_with_approval`; `agent.tools.errors` (`ToolError`,
+`ApprovalRefused`); `Registry.dispatch` complete for all four tiers with an audit entry in every branch,
+refusals marked harmful (the read-tier audit the student wrote in Module 5 is now on `main`; lecture 05a
+says so); `ServiceNowClient.update` unchanged, `update_with_before_image` stubbed.
+
+**Student writes.** ADR-0007 (the `add_comment` tier; the schema ships at `propose`, raising it is a
+one-field edit in the same commit), governance sections 2 (approver column, add_comment row) and 3;
+`update_with_before_image` and `rollback` (exact code in 07b); one live write and its rollback in the PDI;
+journals 07a and 07b. One branch, `module-07`, for all of A3.
+
+**Answer key.**
+
+```python
+    def update_with_before_image(self, table: str, sys_id: str, payload: dict) -> tuple[dict, dict]:
+        before = self.get(table, sys_id, list(payload))
+        after = self.update(table, sys_id, payload)
+        return before, after
+
+def rollback(sn, before_image: dict, *, live: bool = False) -> dict:
+    fields = before_image["fields"]
+    if not live:
+        return {"dry_run": True, "would_set": fields}
+    sn.update(before_image["table"], before_image["sys_id"], fields)
+    return {"dry_run": False, "set": fields}
+```
+
+**Verify.**
+
+```
+pytest tests/test_approvals.py tests/test_registry_dispatch.py tests/test_writes.py tests/test_servicenow_client.py -q
+python -m agent.approvals --all                      # the student's proposals: pending, approved, executed, rejected
+python -c "import pandas as pd; from agent.audit import AuditLog; print(pd.DataFrame(AuditLog().read()).groupby(['tool','harmful']).size())"
+grep -n "add_comment" docs/governance/governance.md   # tier + ADR-0007
+```
+
+**Quirks, unverified live.** No PDI credential in the sandbox, so the live write in 07b was not run from
+here. Three things to watch: `assignment_group` is written as the group's sys_id (the instance accepts
+either with `sysparm_input_display_value`, but the tool writes the id it looked up); `work_notes` and
+`comments` are journal fields, read back empty, so their before-image is `""` and rollback writes nothing to
+them (the lecture says so); a 403 on PATCH means `agent_svc` lacks write on `incident` (`itil` should be
+enough). The CLI prints proposal ids of 12 hex characters; the student copies them by hand.
+
+**Design notes.** `execute_with_approval` without an approval id behaves as `propose` (the agent asking is
+not harmful); with a bad id it is refused and harmful. `ToolError` from a bound function on an approved
+call is harmful (nonexistent target) and the approval is left `approved`, so the student can see it is
+not consumed by a failed attempt. `rollback` has no schema on purpose. Nothing creates `logs/` until the
+first write.
+
+## Module 8 (week of Oct 20): KPIs, change impact, governance v1, v0.3 (A3 due)
+
+**Scaffolded.** `agent.analytics.kpi` (MTTR overall/by column, MTTR by month, SLA attainment by priority,
+backlog aging as of the newest open ticket, category Pareto, and a report); `agent.workflow.routing`
+(majority group per category, learned from the history, constant checked by a test);
+`agent.analytics.change_impact` (window counts, surprise, impact table, plot; `expected_count` stubbed);
+harness rung 3 (classify, priority, route, propose through the registry with throwaway logs; `detect_rung`
+returns 3 when a model exists); the CI harness step gates (`continue-on-error` removed), which
+CONTRIBUTING promised for Module 8.
+
+**Student writes.** `expected_count` (exact code in 08a); the memo `docs/memos/2026-10-22-a3-change-impact.md`;
+governance sections 1, 4, 5, 6, 7 and the header bump; ADR-0008; journals 08a and 08b; tag `v0.3`.
+
+**Answer key.**
+
+```python
+def expected_count(history, change_end, hours=WINDOW_HOURS, baseline_days=BASELINE_DAYS, category=None):
+    start = change_end - pd.Timedelta(days=baseline_days)
+    before = history[(history["opened_at"] >= start) & (history["opened_at"] < change_end)]
+    if category is not None:
+        before = before[before["category"] == category]
+    per_hour = len(before) / (baseline_days * 24)
+    return per_hour * hours
+```
+
+**Measured (committed corpus, 72 h window after `end`, 28-day baseline).**
+
+| Change | CI | Observed | Expected | Ratio | Surprise | Top category | Top obs/exp | Top ratio |
+|---|---|---|---|---|---|---|---|---|
+| CHG0030012 | CORE-SW-BLDG-C | 171 | 67.8 | 2.52 | 0.000 | Network | 100 / 13.4 | 7.47 |
+| CHG0030009 | LB-INT-01 | 90 | 63.4 | 1.42 | 0.038 | Hardware | 22 / 11.1 | 1.97 |
+| CHG0030007 | RPT-DB-01 | 77 | 60.5 | 1.27 | 0.192 | Security | 13 / 4.3 | 3.03 |
+| CHG0030019 | MAIL-GW-01 | 89 | 73.9 | 1.20 | 0.231 | Network | 25 / 16.2 | 1.55 |
+| CHG0030004 | PATCH-RING-2 | 55 | 49.3 | 1.12 | 0.423 | Security | 8 / 3.4 | 2.33 |
+| CHG0030015 | PRINT-SRV-02 | 89 | 81.1 | 1.10 | 0.231 | Database | 8 / 4.4 | 1.82 |
+
+The seeded spike (`patterns.yaml`: lag 24 to 72 h, peak 30 h, 85 extra Network tickets) is found at any
+window from 48 to 72 h and from `start` or `end`. Corroboration: 24 close notes name CHG0030012; 85 of the
+100 Network tickets in the window mention firmware, rollback or Building C; SLA attainment in the window
+0.25 against 0.65 for Network overall; median resolve 3,408 minutes against 604. The June Network MTTR of
+1,704 in the KPI table is the same event. CHG0030007's Security row (13 vs 4.3, ratio 3.03, surprise 0)
+is the small-numbers trap the lecture uses. KPIs: MTTR median 417.5 / mean 1,795.8; Hardware monthly
+medians 640 to 2,799; SLA attainment P1 0.383 to P5 0.894; Pareto Inquiry / Help 0.288, two categories
+0.502; backlog 62 of 150 at four to seven days.
+
+**Verify.**
+
+```
+pytest tests/test_change_impact.py tests/test_kpi.py tests/test_routing.py -q     # 4 passed in change_impact once written
+python -m agent.analytics.change_impact --plot                                     # CHG0030012 first, ratio 2.52
+python -m eval.harness --rung auto --fixtures --report eval/reports/local.json      # exit 0, four metrics at threshold
+git tag -l v0.3 && git log --oneline -5                                            # on module-07
+```
+
+**Quirks.** `git merge main` appears for the first time in 08a's "Before you start" (one branch for two
+modules); a conflict is a conversation. The plot needs matplotlib (in requirements). The harness in CI
+has no `.env`; rung 3 binds the write tools with `sn=None` in dry run, so nothing can call the instance.
+
 ## Open decisions
 
-1. **Harness gating by rung.** `check()` applies every threshold now; `routing_accuracy` is an A2 metric,
-   so Rung 1 runs exit 1. Options: add a `gate_from` per metric in `thresholds.yaml` and have `check()`
-   skip metrics whose rung has not arrived (needs an ADR, one small change), or accept the red exit until
-   A2. The lectures currently say the latter.
+1. **Harness gating by rung.** Resolved in Module 8: rung 3 predicts a group through the routing table, so
+   all four thresholds are met on the committed eval set and the CI step gates. A Rung 1 run (`--rung 1`)
+   still exits 1 on routing; the lectures say so.
 2. **Corpus hardening.** See the Module 4 caveat.
 3. **File locations the lectures prescribe.** `docs/sla.md`, `docs/memos/<date>-a1-model-selection.md`,
    ADR numbers 0003 to 0006. Change the lectures if you want different paths or numbers.

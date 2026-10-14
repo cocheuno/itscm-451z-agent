@@ -67,3 +67,17 @@ def test_create_can_ask_for_display_value_resolution():
     sn, fake = make_client(FakeResponse(200, b'{"result": {"sys_id": "1"}}'))
     sn.create("cmdb_ci", {"name": "X", "support_group": "Network Ops"}, display_values=True)
     assert fake.calls == [("POST", "https://example.service-now.com/api/now/table/cmdb_ci")]
+
+
+def test_update_with_before_image_reads_then_patches():
+    """Module 7 session 2: the GET for exactly the fields about to change must precede the PATCH."""
+    before = json.dumps({"result": {"assignment_group": "", "work_notes": ""}}).encode()
+    after = json.dumps({"result": {"assignment_group": "g-net", "work_notes": ""}}).encode()
+    sn, fake = make_client(FakeResponse(200, before), FakeResponse(200, after))
+    try:
+        b, a = sn.update_with_before_image("incident", "abc", {"assignment_group": "g-net", "work_notes": "[agent] x"})
+    except NotImplementedError:
+        pytest.skip("update_with_before_image is written in Module 7 session 2")
+    assert [m for m, _ in fake.calls] == ["GET", "PATCH"]
+    assert fake.calls[0][1].endswith("/incident/abc") and fake.calls[1][1].endswith("/incident/abc")
+    assert b == {"assignment_group": "", "work_notes": ""} and a["assignment_group"] == "g-net"

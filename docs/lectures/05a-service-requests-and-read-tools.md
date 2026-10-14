@@ -20,7 +20,7 @@ A2 (due Oct 8) builds on today.
 | The three read tools in `src\agent\tools\readonly.py` | Yes | Read and run them (Part 4) |
 | Their three schema files | Yes | Read them field by field (Part 2) |
 | The seeder's `--groups --cis --kb` options | Yes | Run them against your PDI (Part 3) |
-| The audit entry in `Registry.dispatch` | No, marked `TODO(student)` | Write it (Part 4, Step 2) |
+| The audit entry in `Registry.dispatch` | Since Module 7, yes | Write it if your `main` predates Module 7; otherwise read it (Part 4, Step 2) |
 
 ## Why this session exists
 
@@ -257,6 +257,9 @@ even when it is (Module 8), the registry refuses to run it without an approval. 
 design.
 
 ### Step 2: the audit entry
+
+> If `dispatch` already contains `audit.write(...)` when you open it, the instructor landed this with Module 7.
+> Read the read-tier branch instead of writing it, run the test below, and go on.
 
 Open `src\agent\tools\registry.py` and find `def dispatch`. It accepts an `audit` argument and does
 nothing with it yet; the docstring says every branch must write an entry. Add it for the read branch.

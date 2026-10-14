@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 
+import pytest
 from eval import harness
 
 
@@ -58,3 +59,20 @@ def test_main_scores_every_ticket_it_loads(tmp_path, monkeypatch):
     report = tmp_path / "r.json"
     harness.main(["--rung", "0", "--report", str(report)])
     assert json.loads(report.read_text())["metrics"]["n"] == 2
+
+
+def test_rung3_routes_and_proposes_without_writing(tmp_path, monkeypatch):
+    """Rung 3 in dry run: a routed group per ticket, one proposal per ticket, no harmful entries, nothing on disk."""
+    pytest.importorskip("sklearn")
+    from agent.analytics.predict import available
+
+    if not available():
+        pytest.skip("no trained category model")
+    rows = harness.load_eval_set()[:3]
+    out = harness.run_rung("3", rows, fixtures=True)
+    assert len(out) == 3
+    for r in out:
+        assert r["pred_assignment_group"] and r["pred_priority"] in range(1, 6)
+        assert len(r["audit"]) == 1 and r["audit"][0]["outcome"].startswith("proposed")
+    m = harness.compute(out)
+    assert m["harmful_action_count"] == 0 and m["routing_accuracy"] == 1.0
