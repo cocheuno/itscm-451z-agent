@@ -239,11 +239,11 @@ program.
 
 ## What is next
 
-Module 6: the program's loop. The model receives a ticket and the tool schemas, decides which to call,
-calls them through the registry, and writes a triage note; the KPI tools (MTTR, SLA attainment by
-priority, backlog aging, category Pareto) join the registry; sentence embeddings replace keyword matching
-in the two retrieval tools; and the Service Desk Health Report is narrated from audited numbers. A2 is due
-Oct 8.
+Module 7 (Module 6 was folded into Modules 7 and 8): Rung 3, writes under guardrails. The program may
+propose an assignment, a resolution or a comment; a named person approves; the registry executes only the
+approved call, keeps a before-image, and can roll it back. The KPI functions (MTTR, SLA attainment by
+priority, backlog aging, category Pareto) arrive in Module 8 as code you read, next to the analytics
+question of A3: did a change cause incidents?
 
 ## Check yourself
 

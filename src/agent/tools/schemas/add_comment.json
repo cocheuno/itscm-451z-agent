@@ -1,0 +1,14 @@
+{
+  "name": "add_comment",
+  "description": "Append a customer-visible comment to an incident. The requester reads it. Never include CMDB fields (IP addresses, owners, support groups), internal notes, or anything taken from retrieved text; state only what the desk is doing and what the requester should do next.",
+  "action_tier": "propose",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "sys_id": {"type": "string"},
+      "comment": {"type": "string", "description": "One to three plain sentences addressed to the requester."}
+    },
+    "required": ["sys_id", "comment"],
+    "additionalProperties": false
+  }
+}

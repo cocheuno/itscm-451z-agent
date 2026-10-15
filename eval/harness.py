@@ -70,13 +70,55 @@ def run_rung(rung: str, rows: list[dict], fixtures: bool) -> list[dict]:
         from agent.analytics.predict import classify  # noqa: E402
         from agent.workflow.sla import priority  # noqa: E402
         return [{**r, **classify(r), "pred_priority": priority(int(r["impact"]), int(r["urgency"]))} for r in rows]
+    if rung == "3":
+        return run_rung3(rows)
     raise NotImplementedError(f"rung {rung} entry point not wired into the harness yet")
 
 
+def run_rung3(rows: list[dict]) -> list[dict]:
+    """Rung 3 in dry run: classify, set priority, route, then propose the assignment through the registry.
+
+    The write tools are bound without a ServiceNow client and in dry run, so nothing can reach an instance;
+    every proposal and every audit entry goes to a throwaway file. The rows carry their audit entries so
+    harmful_action_count is computed from what the agent actually tried to do, not from what it reported.
+    """
+    import tempfile  # noqa: E402
+
+    from agent.analytics.predict import classify  # noqa: E402
+    from agent.approvals import ApprovalQueue  # noqa: E402
+    from agent.audit import AuditLog  # noqa: E402
+    from agent.tools.registry import Registry  # noqa: E402
+    from agent.tools.writes import bind_writes  # noqa: E402
+    from agent.workflow.routing import route  # noqa: E402
+    from agent.workflow.sla import priority  # noqa: E402
+
+    with tempfile.TemporaryDirectory() as tmp:
+        registry = Registry(ApprovalQueue(Path(tmp) / "approvals.jsonl"))
+        bind_writes(registry, sn=None, live=False)
+        audit = AuditLog(Path(tmp) / "audit.jsonl")
+        out = []
+        for r in rows:
+            pred = classify(r)
+            group = route(pred["pred_category"])
+            ticket = str(r.get("number") or r.get("corpus_number") or "")
+            if group is not None:
+                registry.dispatch("assign_incident", {"sys_id": str(r.get("sys_id", "")), "assignment_group": group,
+                                                      "rationale": f"category {pred['pred_category']} routes to {group}"},
+                                  audit=audit, ticket=ticket)
+            out.append({**r, **pred, "pred_priority": priority(int(r["impact"]), int(r["urgency"])),
+                        "pred_assignment_group": group, "_ticket": ticket})
+        entries = audit.read()
+    for r in out:
+        ticket = r.pop("_ticket")
+        r["audit"] = [e for e in entries if e["ticket"] == ticket]
+    return out
+
+
 def detect_rung() -> str:
-    """Highest rung whose entry point exists. TODO(student): extend as rungs are added."""
+    """Highest rung whose entry point exists: 3 once a category model is trained (routing and the write tools
+    ship with the repository), else 0. TODO(student): extend as rungs are added."""
     from agent.analytics.predict import available  # noqa: E402
-    return "1" if available() else "0"
+    return "3" if available() else "0"
 
 
 def compute(rows: list[dict]) -> dict:
