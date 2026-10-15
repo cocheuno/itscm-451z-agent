@@ -75,9 +75,15 @@ class ServiceNowClient:
         return self._request("POST", f"{self.base}/{table}", json=payload, params=params)["result"]
 
     def update(self, table: str, sys_id: str, payload: dict) -> dict:
-        """TODO(student, Module 8): capture a before-image of the fields in payload before PATCHing,
-        and return both so audit.py can store it for rollback."""
+        """PATCH the fields in payload. The write tools never call this directly; they go through
+        update_with_before_image so there is always a way back."""
         return self._request("PATCH", f"{self.base}/{table}/{sys_id}", json=payload)["result"]
+
+    def update_with_before_image(self, table: str, sys_id: str, payload: dict) -> tuple[dict, dict]:
+        """TODO(student, Module 7 session 2): read the fields named in payload as they are now, then PATCH,
+        and return (before, after). The before-image is what the audit entry stores and rollback() restores.
+        Exact code in lecture 07b."""
+        raise NotImplementedError
 
     def delete(self, table: str, sys_id: str) -> None:
         self._request("DELETE", f"{self.base}/{table}/{sys_id}")

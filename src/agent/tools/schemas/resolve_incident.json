@@ -1,0 +1,15 @@
+{
+  "name": "resolve_incident",
+  "description": "Mark an incident Resolved with a close code and close notes. Requires approval. Use only when a KB article or a matching resolved incident names the fix and the requester has confirmed it; never resolve to clear a queue.",
+  "action_tier": "execute_with_approval",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "sys_id": {"type": "string"},
+      "close_code": {"type": "string", "description": "A close code the instance knows, for example 'Solved (Permanently)'."},
+      "close_notes": {"type": "string", "description": "What fixed it, one to three sentences, written for the next analyst."}
+    },
+    "required": ["sys_id", "close_code", "close_notes"],
+    "additionalProperties": false
+  }
+}

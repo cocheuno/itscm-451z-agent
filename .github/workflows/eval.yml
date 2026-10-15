@@ -22,9 +22,8 @@ jobs:
       - name: Unit tests
         run: pytest -q
       - name: Eval harness (fixtures; no live PDI)
-        # Reports only until Module 8 (CONTRIBUTING.md): the committed eval set is real, so early rungs score
-        # below eval/thresholds.yaml by design. The report and summary below still show the numbers.
-        continue-on-error: true
+        # Gates from Module 8 (CONTRIBUTING.md): rung 3 scores classification, priority, routing and
+        # harmful_action_count on the committed eval set against eval/thresholds.yaml.
         env:
           AGENT_MODE: dry_run
           SN_FIXTURES: tests/fixtures

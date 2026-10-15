@@ -79,6 +79,9 @@ The course has three threads woven through every module:
   Report.
 - **M7–M8 (A3, due Oct 22):** models-as-artifacts governance (model cards as
   ADRs); diagnostic analytics: change-induced incident correlation.
+  *Note, Oct 14: Module 6 was not taught. Its KPI functions and routing
+  table ship as scaffold in Module 8; embeddings and the agent loop move to
+  Rung 4; no `v0.2` tag. A2 grading: instructor's call.*
 - **M9 (BCP):** anomaly detection on ticket volume (residual-based or
   isolation forest) wired to the agent-failure runbook — an anomaly triggers
   degraded mode.
