@@ -19,7 +19,7 @@ for each module. The student's work stays on their laptop, one branch per module
 | 2026-09-24 | 4 | [The build review, the memo, and Rung 1 done (A1 due)](04b-bakeoff-memo-v0.1.md) | (steps are in the lecture) |
 | 2026-09-29 | 5 | [Service requests, tool schemas, and read-only tools](05a-service-requests-and-read-tools.md) | (steps are in the lecture) |
 | 2026-10-01 | 5 | [The Model Context Protocol](05b-mcp.md) | (steps are in the lecture) |
-| week of Oct 13 | 7 | [ITSM, AI agents, agentic workflows, and where analytics fits](07-0-itsm-agents-agentic-workflows-analytics.md) (conceptual, no terminal) | — |
+| week of Oct 13 | 7 | [ITSM, AI agents, agentic workflows, and where analytics fits](07-0-itsm-agents-agentic-workflows-analytics.md) (conceptual, no terminal) | [slides](07-0-itsm-agents-agentic-workflows-analytics.pptx) |
 | week of Oct 13 | 7 | [Change management, tiers, and proposals](07a-change-management-tiers-proposals.md) | (steps are in the lecture) |
 | week of Oct 13 | 7 | [The before-image, rollback, and one real write](07b-before-image-rollback-live.md) | (steps are in the lecture) |
 | week of Oct 20 | 8 | [The desk's KPIs, and did a change cause incidents?](08a-kpis-and-change-impact.md) | (steps are in the lecture) |
