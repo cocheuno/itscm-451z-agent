@@ -12,8 +12,11 @@ What the agent is for; which ServiceNow tables and practices it touches; what it
 | classify_incident | read | — | — |
 | find_similar_incidents | read | — | — |
 | assign_incident | execute_with_approval | | before-image |
-| add_comment | (decide; ADR) | | |
+| add_comment | propose | | |
 | resolve_incident | execute_with_approval | | before-image |
+| record_triage | execute_with_approval | incident authority | before-image |
+| apply_known_error | execute_with_approval | incident authority | before-image |
+| restore_service | execute_with_approval | incident authority | before-image |
 | draft_rfc | propose | CAB | — |
 
 ## 3. Approval authority

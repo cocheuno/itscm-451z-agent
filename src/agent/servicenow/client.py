@@ -61,8 +61,15 @@ class ServiceNowClient:
         return self._request("GET", f"{self.base}/{table}", params=params)["result"]
 
     def list_all(self, table: str, query: str = "", fields: list[str] | None = None, page: int = 100) -> list[dict]:
-        """TODO(student): paginate until a short page is returned."""
-        raise NotImplementedError
+        """Fetch every matching record by paging until a page comes back shorter than `page`."""
+        out: list[dict] = []
+        offset = 0
+        while True:
+            batch = self.list(table, query, fields, limit=page, offset=offset)
+            out.extend(batch)
+            if len(batch) < page:
+                return out
+            offset += page
 
     def get(self, table: str, sys_id: str, fields: list[str] | None = None) -> dict:
         params = {"sysparm_fields": ",".join(fields)} if fields else None
@@ -80,10 +87,10 @@ class ServiceNowClient:
         return self._request("PATCH", f"{self.base}/{table}/{sys_id}", json=payload)["result"]
 
     def update_with_before_image(self, table: str, sys_id: str, payload: dict) -> tuple[dict, dict]:
-        """TODO(student, Module 7 session 2): read the fields named in payload as they are now, then PATCH,
-        and return (before, after). The before-image is what the audit entry stores and rollback() restores.
-        Exact code in lecture 07b."""
-        raise NotImplementedError
+        """Read the fields in payload as they are now, PATCH them, and return (before, after)."""
+        before = self.get(table, sys_id, list(payload))
+        after = self.update(table, sys_id, payload)
+        return before, after
 
     def delete(self, table: str, sys_id: str) -> None:
         self._request("DELETE", f"{self.base}/{table}/{sys_id}")

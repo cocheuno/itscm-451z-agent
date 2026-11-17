@@ -1,0 +1,16 @@
+{
+  "name": "restore_service",
+  "description": "Resolve an incident with a seeded close code and close notes. Requires approval. Never sets On Hold or a hold reason.",
+  "action_tier": "execute_with_approval",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "sys_id": {"type": "string"},
+      "close_code": {"type": "string"},
+      "close_notes": {"type": "string"},
+      "rationale": {"type": "string"}
+    },
+    "required": ["sys_id", "close_code", "close_notes", "rationale"],
+    "additionalProperties": false
+  }
+}

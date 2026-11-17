@@ -1,0 +1,18 @@
+{
+  "name": "record_triage",
+  "description": "Set the incident category, impact, urgency, and assignment group from the CI-class rule and the CI service group. Requires approval. Does not read the incident text.",
+  "action_tier": "execute_with_approval",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "sys_id": {"type": "string"},
+      "category": {"type": "string"},
+      "impact": {"type": "string"},
+      "urgency": {"type": "string"},
+      "assignment_group": {"type": "string", "description": "Exact group name."},
+      "rationale": {"type": "string"}
+    },
+    "required": ["sys_id", "category", "impact", "urgency", "assignment_group", "rationale"],
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "apply_known_error",
+  "description": "Post the workaround as a comment, set the parent problem, and resolve with close code Workaround provided. Requires approval. Does not write the problem's primary known-error article field.",
+  "action_tier": "execute_with_approval",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "sys_id": {"type": "string"},
+      "parent": {"type": "string"},
+      "comment": {"type": "string"},
+      "close_code": {"type": "string"},
+      "close_notes": {"type": "string"},
+      "rationale": {"type": "string"}
+    },
+    "required": ["sys_id", "parent", "comment", "close_code", "close_notes", "rationale"],
+    "additionalProperties": false
+  }
+}

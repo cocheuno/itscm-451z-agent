@@ -33,7 +33,10 @@ def _env(name: str, default: str | None = None) -> str:
 
 def load() -> Settings:
     return Settings(
-        anthropic_api_key=_env("ANTHROPIC_API_KEY"),
+        # The end-to-end incident workflow makes no LLM call. An empty key is
+        # enough for that path. A classifier that calls Anthropic still needs
+        # the variable set before it runs.
+        anthropic_api_key=os.getenv("ANTHROPIC_API_KEY", ""),
         anthropic_model=_env("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
         sn_instance=_env("SN_INSTANCE").rstrip("/"),
         sn_user=_env("SN_USER"),
