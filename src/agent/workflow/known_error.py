@@ -18,12 +18,12 @@ _E01 = (
     "Larkspur Outfitters incident. Log rotation stopped. The log directory filled."
 )
 _ARTICLE = (
-    "SYN-E2E- Known error for syn-store-cdn "
+    "E2E- Known error for syn-store-cdn "
     "Log rotation stopped. The log directory filled. "
     "Retry the page. Clear the filled log files at the next maintenance window."
 )
 _DECOY = "A jammed printer queue held the lane receipt and the lead asked for paper"
-MARKER = "SYN-E2E-"
+MARKER = "E2E-"
 _TOKEN = re.compile(r"[a-z0-9]+")
 _TAG = re.compile(r"<[^>]+>")
 

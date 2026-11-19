@@ -17,7 +17,7 @@ from agent.workflow.triage import category_for_class, priority_on_this_pdi
 
 TABLE = {"cmdb_ci_appl": "software", "cmdb_ci_linux_server": "hardware"}
 ARTICLE = (
-    "SYN-E2E- Known error for syn-store-cdn "
+    "E2E- Known error for syn-store-cdn "
     "Log rotation stopped. The log directory filled. "
     "Retry the page. Clear the filled log files at the next maintenance window."
 )
@@ -53,7 +53,7 @@ def test_match_requires_the_same_ci_and_returns_the_workaround():
     incident = {"cmdb_ci": "ci-cdn", "short_description": E01, "description": ""}
     article = {
         "number": "KB0001",
-        "short_description": "SYN-E2E- Known error for syn-store-cdn",
+        "short_description": "E2E- Known error for syn-store-cdn",
         "text": (
             "Log rotation stopped. The log directory filled. "
             "Retry the page. Clear the filled log files at the next maintenance window."
